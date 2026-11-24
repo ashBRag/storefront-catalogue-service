@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories } from './api/catalogue.ts';
+import { getCategories, getFeatured } from './api/catalogue.ts';
 import { ApiError } from './api/client.ts';
 import { renderApp } from './test/renderApp.tsx';
 
@@ -13,6 +13,7 @@ const location = () => screen.getByTestId('location').textContent;
 beforeEach(() => {
   mockedGetCategories.mockReset();
   mockedGetCategories.mockResolvedValue(['electronics', "men's clothing"]);
+  vi.mocked(getFeatured).mockResolvedValue([]);
 });
 
 describe('Layout header', () => {
@@ -43,7 +44,7 @@ describe('Layout header', () => {
     renderApp();
 
     expect(await screen.findByText(/categories are unavailable/i)).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Featured products' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Top rated' })).toBeTruthy();
     expect(screen.getByRole('search')).toBeTruthy();
 
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories } from './api/catalogue.ts';
+import { getCategories, getFeatured } from './api/catalogue.ts';
 import { categoryPath } from './paths.ts';
 import { renderApp } from './test/renderApp.tsx';
 
@@ -8,13 +8,14 @@ vi.mock('./api/catalogue.ts');
 
 beforeEach(() => {
   vi.mocked(getCategories).mockResolvedValue([]);
+  vi.mocked(getFeatured).mockResolvedValue([]);
 });
 
 const heading = () => screen.getByRole('heading', { level: 1 }).textContent;
 
 describe('routes', () => {
   it.each([
-    ['/', 'Featured products'],
+    ['/', 'Top rated'],
     ['/search?q=lamp', 'Results for “lamp”'],
     ['/products/7', 'Product 7'],
   ])('%s renders its page', (url, title) => {

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { homePath } from '../paths.ts';
+import { SITE_NAME } from '../site.ts';
 import styles from './AppShell.module.css';
 
 interface AppShellProps {
@@ -22,7 +23,7 @@ export function AppShell({ search, nav, children }: AppShellProps) {
       <header className={styles.header}>
         <div className={styles.inner}>
           <Link to={homePath()} className={styles.siteName}>
-            Product Catalogue
+            {SITE_NAME}
           </Link>
           <div className={styles.search}>{search}</div>
           <div className={styles.nav}>{nav}</div>

@@ -3,7 +3,7 @@
  * Reskinning the app means editing this file. Light theme only.
  *
  * Breakpoints (CSS variables can't be used inside @media, so they are hard-coded where used):
- *   --bp-medium: 40rem (640px)  header goes from stacked to one row
+ *   --bp-medium: 40rem (640px)  header goes from stacked to one row; product grid from 2 columns to auto-fill
  */
 :root {
   /* Colour */
@@ -18,6 +18,8 @@
   --color-danger: #b42318;
   --color-danger-surface: #fef3f2;
   --color-focus: #f5a623;
+  --color-rating: #9a5b00;
+  --color-image-bg: #ffffff;
 
   /* Spacing (4px scale) */
   --space-1: 0.25rem;
@@ -37,6 +39,7 @@
   --font-weight-normal: 400;
   --font-weight-bold: 600;
   --line-height: 1.5;
+  --line-height-tight: 1.2;
 
   /* Shape */
   --radius-sm: 4px;
@@ -51,4 +54,12 @@
   --content-max-width: 72rem;
   --control-height: 2.5rem;
   --search-max-width: 28rem;
+
+  /* Product tiles */
+  /* 12rem fits 5 tiles across at --content-max-width, so the 5 featured products share one row. */
+  --tile-min-width: 12rem;
+  --tile-image-aspect: 1 / 1;
+  --tile-title-lines: 2;
+  --grid-gap: var(--space-6);
+  --grid-gap-narrow: var(--space-3);
 }
