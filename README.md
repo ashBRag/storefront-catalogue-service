@@ -131,7 +131,7 @@ Enquiry fields:
 - `name`: 1–100 characters, single line.
 - `email`: a valid address.
 - `phone`: optional; 6–20 digits, spaces, `+`, `-` or `()`.
-- `message`: 1–1000 characters.
+- `message`: optional, up to 1000 characters.
 
 Strings are trimmed. Enquiries are emailed only, never stored.
 

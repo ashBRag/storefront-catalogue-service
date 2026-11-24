@@ -38,7 +38,6 @@ describe('POST /api/enquiries', () => {
     ['email', { email: 'ann@example.test\r\nBcc: evil@example.test' }],
     ['phone', { phone: 'call me' }],
     ['phone', { phone: '((((((' }],
-    ['message', { message: '   ' }],
     ['message', { message: 'x'.repeat(1001) }],
     ['productId', { productId: '6' }],
     ['productId', { productId: undefined }],
@@ -51,6 +50,14 @@ describe('POST /api/enquiries', () => {
     expect(response.body.error.details).toContainEqual(expect.objectContaining({ path: field }));
     expect(JSON.stringify(response.body)).not.toContain('evil@example.test');
     expect(emailSender.sent).toEqual([]);
+  });
+
+  it.each([['blank', '   '], ['missing', undefined]])('accepts a %s message', async (_label, message) => {
+    const { server, emailSender } = await start();
+    const response = await request(server).post('/api/enquiries').send({ ...valid, message });
+
+    expect(response.status).toBe(201);
+    expect(emailSender.sent[0]?.text).toMatch(/\nMessage:\n\(no message\)$/);
   });
 
   it('accepts a valid phone number', async () => {

@@ -4,5 +4,6 @@ export interface Enquiry {
   readonly name: string;
   readonly email: string;
   readonly phone: string | undefined;
-  readonly message: string;
+  /** Optional: undefined when the customer left it blank. */
+  readonly message: string | undefined;
 }

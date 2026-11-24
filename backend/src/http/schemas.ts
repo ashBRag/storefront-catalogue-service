@@ -32,7 +32,7 @@ export const enquiryBody = z.object({
       .refine((phone) => phone.replace(/\D/g, '').length >= MIN_PHONE_DIGITS, 'must contain at least 6 digits')
       .optional(),
   ),
-  message: z.string().trim().min(1, 'is required').max(1000),
+  message: z.preprocess(blankToUndefined, z.string().trim().max(1000, 'must be at most 1000 characters').optional()),
 });
 
 export const searchQuery = z.object({

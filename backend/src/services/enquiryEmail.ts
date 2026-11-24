@@ -1,6 +1,8 @@
 import type { Enquiry } from '../domain/enquiry.ts';
 import type { Product } from '../domain/product.ts';
 
+const NO_MESSAGE = '(no message)';
+
 export interface EnquiryEmailContent {
   readonly subject: string;
   readonly text: string;
@@ -15,12 +17,12 @@ export function buildEnquiryEmail(enquiry: Enquiry, product: Product): EnquiryEm
   const rows = detailRows(enquiry, product);
   return {
     subject: singleLine(`Product enquiry: ${product.title} (#${product.id})`),
-    text: [...rows.map(([label, value]) => `${label}: ${value}`), '', 'Message:', enquiry.message].join('\n'),
+    text: [...rows.map(([label, value]) => `${label}: ${value}`), '', 'Message:', enquiry.message ?? NO_MESSAGE].join('\n'),
     html: [
       '<table>',
       ...rows.map(([label, value]) => `<tr><th align="left">${label}</th><td>${escapeHtml(value)}</td></tr>`),
       '</table>',
-      `<p><strong>Message</strong></p><p style="white-space: pre-wrap">${escapeHtml(enquiry.message)}</p>`,
+      `<p><strong>Message</strong></p><p style="white-space: pre-wrap">${escapeHtml(enquiry.message ?? NO_MESSAGE)}</p>`,
     ].join('\n'),
   };
 }
