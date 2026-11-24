@@ -14,3 +14,13 @@ export class UpstreamError extends Error {
     this.reason = reason;
   }
 }
+
+/** A requested resource (product, category) does not exist. The HTTP layer maps it to 404. */
+export class NotFoundError extends Error {
+  override readonly name = 'NotFoundError';
+}
+
+/** Caller input broke a business rule. The HTTP layer maps it to 400. */
+export class ValidationError extends Error {
+  override readonly name = 'ValidationError';
+}
