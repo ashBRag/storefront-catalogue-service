@@ -16,7 +16,7 @@ const heading = () => screen.getByRole('heading', { level: 1 }).textContent;
 describe('routes', () => {
   it.each([
     ['/', 'Top rated'],
-    ['/search?q=lamp', 'Results for “lamp”'],
+    ['/search?q=lamp', 'Search results'],
     ['/products/7', 'Product 7'],
   ])('%s renders its page', (url, title) => {
     renderApp(url);

@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories } from './api/catalogue.ts';
+import { getCategories, searchProducts } from './api/catalogue.ts';
 import { ApiError } from './api/client.ts';
 import { mockApiDefaults } from './test/mockApi.ts';
 import { renderApp } from './test/renderApp.tsx';
@@ -66,7 +66,8 @@ describe('search bar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     expect(location()).toBe('/search?q=men%27s+%26+co');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Results for “men's & co”");
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Search results');
+    expect(searchProducts).toHaveBeenCalledWith("men's & co", expect.any(AbortSignal));
   });
 
   it('submits on Enter', async () => {

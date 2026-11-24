@@ -1,5 +1,17 @@
-.title {
+.header {
   margin-bottom: var(--space-6);
+}
+
+.title {
   font-size: var(--font-size-xl);
   line-height: var(--line-height-tight);
+}
+
+.summary {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.summary:empty {
+  display: none;
 }
