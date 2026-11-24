@@ -1,14 +1,14 @@
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories, getFeatured } from './api/catalogue.ts';
+import { getCategoryProducts } from './api/catalogue.ts';
 import { categoryPath } from './paths.ts';
+import { mockApiDefaults } from './test/mockApi.ts';
 import { renderApp } from './test/renderApp.tsx';
 
 vi.mock('./api/catalogue.ts');
 
 beforeEach(() => {
-  vi.mocked(getCategories).mockResolvedValue([]);
-  vi.mocked(getFeatured).mockResolvedValue([]);
+  mockApiDefaults();
 });
 
 const heading = () => screen.getByRole('heading', { level: 1 }).textContent;
@@ -33,7 +33,7 @@ describe('routes', () => {
     'round-trips the category name %j through the URL',
     (category) => {
       renderApp(categoryPath(category));
-      expect(heading()).toBe(category);
+      expect(getCategoryProducts).toHaveBeenCalledWith(category, expect.any(AbortSignal));
     },
   );
 });

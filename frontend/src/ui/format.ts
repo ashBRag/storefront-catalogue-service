@@ -12,6 +12,11 @@ const priceFormatter = new Intl.NumberFormat(PRICE_LOCALE, { style: 'currency', 
 const rateFormatter = new Intl.NumberFormat(PRICE_LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const countFormatter = new Intl.NumberFormat(PRICE_LOCALE);
 
+/** Category names come lower-case from the API; capitalise the first letter for titles. */
+export function formatCategory(category: string): string {
+  return category.charAt(0).toLocaleUpperCase(PRICE_LOCALE) + category.slice(1);
+}
+
 export function formatPrice(price: number): string {
   return priceFormatter.format(price);
 }

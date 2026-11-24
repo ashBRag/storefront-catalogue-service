@@ -1,8 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories, getFeatured } from './api/catalogue.ts';
+import { getCategories } from './api/catalogue.ts';
 import { ApiError } from './api/client.ts';
+import { mockApiDefaults } from './test/mockApi.ts';
 import { renderApp } from './test/renderApp.tsx';
 
 vi.mock('./api/catalogue.ts');
@@ -11,9 +12,8 @@ const mockedGetCategories = vi.mocked(getCategories);
 const location = () => screen.getByTestId('location').textContent;
 
 beforeEach(() => {
-  mockedGetCategories.mockReset();
+  mockApiDefaults();
   mockedGetCategories.mockResolvedValue(['electronics', "men's clothing"]);
-  vi.mocked(getFeatured).mockResolvedValue([]);
 });
 
 describe('Layout header', () => {
@@ -36,7 +36,7 @@ describe('Layout header', () => {
     await userEvent.click(await screen.findByRole('link', { name: "men's clothing" }));
 
     expect(location()).toBe("/categories/men's%20clothing");
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("men's clothing");
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Men's clothing");
   });
 
   it('shows a fallback with retry when categories fail, and the page still renders', async () => {

@@ -1,8 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategories, getFeatured } from '../api/catalogue.ts';
+import { getFeatured } from '../api/catalogue.ts';
 import { ApiError } from '../api/client.ts';
+import { mockApiDefaults } from '../test/mockApi.ts';
 import { renderApp } from '../test/renderApp.tsx';
 import type { Product } from '../types/index.ts';
 
@@ -22,8 +23,7 @@ function product(id: number): Product {
 }
 
 beforeEach(() => {
-  vi.mocked(getCategories).mockResolvedValue([]);
-  mockedGetFeatured.mockReset();
+  mockApiDefaults();
 });
 
 const main = () => screen.getByRole('main');
