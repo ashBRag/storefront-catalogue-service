@@ -6,7 +6,7 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md).
 
 - Node 24 (Active LTS), TypeScript 5.x with `strict: true`
 - Fastify (HTTP), @fastify/helmet (security headers), @fastify/rate-limit (enquiry rate limit), zod (validation), nodemailer (email), pino (logging, via Fastify's logger)
-- Vitest + supertest (tests)
+- Vitest + supertest (tests), @vitest/coverage-v8 (`npm run coverage`)
 - npm
 
 ## Architecture: layered, ports and adapters

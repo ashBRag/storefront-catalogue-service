@@ -168,6 +168,7 @@ Run from `backend/`:
 
 ```sh
 npm test            # Vitest: unit and HTTP tests on in-memory adapters (no network, no SMTP)
+npm run coverage    # same tests with v8 coverage for src/services and src/http (table here, HTML in coverage/)
 npm run typecheck   # tsc --noEmit, strict mode
 npm run build       # compile to dist/ (what the Docker image runs)
 ```

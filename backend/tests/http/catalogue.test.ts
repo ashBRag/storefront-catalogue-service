@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { InMemoryProductSource } from '../../src/adapters/InMemoryProductSource.ts';
+import { InMemoryProductSource, productFixtures } from '../../src/adapters/InMemoryProductSource.ts';
+import type { Product } from '../../src/domain/product.ts';
 import { UpstreamError } from '../../src/domain/errors.ts';
 import type { ProductSource } from '../../src/ports/ProductSource.ts';
 import { buildTestApp } from '../helpers/testApp.ts';
@@ -46,6 +47,16 @@ describe('catalogue routes', () => {
     expect(response.body).toEqual({ error: { code: 'NOT_FOUND', message: expect.any(String) } });
   });
 
+  it('GET /api/products?q= returns only products whose title, description or category match', async () => {
+    const response = await request(app.server).get('/api/products').query({ q: 'PRODUCT 1' });
+    const matches = (product: Product) =>
+      [product.title, product.description, product.category].some((field) => field.toLowerCase().includes('product 1'));
+
+    expect(response.status).toBe(200);
+    expect(response.body.every(matches)).toBe(true);
+    expect(ids(response.body).sort()).toEqual(productFixtures.filter(matches).map((product) => product.id).sort());
+  });
+
   it('GET /api/products?q= searches', async () => {
     const response = await request(app.server).get('/api/products').query({ q: 'jewelery' });
     expect(response.status).toBe(200);
@@ -85,6 +96,33 @@ describe('catalogue routes', () => {
     const response = await request(app.server).get('/api/nope');
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
+describe('category split', () => {
+  // 5 electronics fixtures plus 3 more, so the category has both top rated and others.
+  const extra = [4.4, 1.2, 3.8].map((rate, index) => ({ ...productFixtures[0]!, id: 100 + index, rating: { rate, count: 10 } }));
+  const app = appWith(new InMemoryProductSource([...productFixtures, ...extra]));
+
+  beforeAll(async () => {
+    await app.ready();
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('returns the top 5 as topRated and the rest as others, with no overlap and nothing missing', async () => {
+    const response = await request(app.server).get('/api/categories/electronics/products');
+    const top = ids(response.body.topRated);
+    const others = ids(response.body.others);
+    const everyElectronicsId = [...productFixtures, ...extra].filter((p) => p.category === 'electronics').map((p) => p.id);
+
+    expect(response.status).toBe(200);
+    expect(top).toHaveLength(5);
+    expect(top.filter((id) => others.includes(id))).toEqual([]);
+    expect([...top, ...others].sort()).toEqual(everyElectronicsId.sort());
+    expect(top).toEqual([2, 3, 100, 1, 102]);
+    expect(others).toEqual([5, 4, 101]);
   });
 });
 

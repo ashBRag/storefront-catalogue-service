@@ -93,6 +93,17 @@ describe('CatalogueService.search', () => {
     expect(ids(await service.search('test product 10'))).toEqual([10]);
   });
 
+  it.each([
+    ['title', { title: 'Velvet Lamp' }, 'velvet'],
+    ['description', { description: 'Hand-made in Oslo' }, 'OSLO'],
+    ['category', { category: 'Home Decor' }, 'home DECOR'],
+  ])('finds a product when only its %s matches, ignoring case', async (_field, patch, query) => {
+    const plain = { ...productFixtures[0]!, title: 'Item', description: 'Plain', category: 'misc' };
+    const { service } = build({}, [{ ...plain, id: 1, ...patch }, { ...plain, id: 2 }]);
+
+    expect(ids(await service.search(query))).toEqual([1]);
+  });
+
   it('treats regex characters literally', async () => {
     const { service } = build();
     expect(await service.search('.*')).toEqual([]);

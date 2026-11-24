@@ -52,6 +52,16 @@ describe('POST /api/enquiries', () => {
     expect(emailSender.sent).toEqual([]);
   });
 
+  it.each(['name', 'email', 'productId'] as const)('rejects a request with no %s field at all', async (field) => {
+    const { server, emailSender } = await start();
+    const { [field]: _omitted, ...body } = valid;
+    const response = await request(server).post('/api/enquiries').send(body);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details).toContainEqual(expect.objectContaining({ path: field }));
+    expect(emailSender.sent).toEqual([]);
+  });
+
   it.each([['blank', '   '], ['missing', undefined]])('accepts a %s message', async (_label, message) => {
     const { server, emailSender } = await start();
     const response = await request(server).post('/api/enquiries').send({ ...valid, message });

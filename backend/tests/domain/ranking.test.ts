@@ -23,6 +23,15 @@ describe('rankByRating', () => {
     expect(ids(rankByRating([rated(9, 4, 10), rated(3, 4, 10), rated(5, 4, 10)]))).toEqual([3, 5, 9]);
   });
 
+  it('gives the same order whatever order the input arrives in', () => {
+    const products = [rated(4, 4, 10), rated(2, 5, 1), rated(3, 4, 10), rated(1, 4, 50)];
+    const shuffles = [products, [...products].reverse(), [products[2]!, products[0]!, products[3]!, products[1]!]];
+
+    for (const input of shuffles) {
+      expect(ids(rankByRating(input))).toEqual([2, 1, 3, 4]);
+    }
+  });
+
   it('does not mutate its input', () => {
     const input = [rated(1, 1, 1), rated(2, 5, 1)];
     rankByRating(input);
