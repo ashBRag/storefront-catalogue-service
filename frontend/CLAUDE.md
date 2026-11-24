@@ -6,12 +6,12 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md). The spec, pag
 
 - React 19, TypeScript 5.x with `strict: true`, Vite (built with Node 24)
 - React Router (pages)
-- Plain CSS: CSS Modules beside each component, with design tokens in `src/styles/tokens.css`
+- Plain CSS: CSS Modules beside each UI component, with design tokens in `src/ui/styles/tokens.css`
 - Vitest + React Testing Library + `@testing-library/user-event` + jsdom (tests)
 - No linter or formatter: strict `tsc` and tests only, matching the backend
 - npm
 
-**Not allowed:** UI component libraries, CSS frameworks (e.g. Tailwind), state libraries (e.g. Redux, Zustand), and data-fetching libraries (e.g. React Query, SWR, axios). React state and `fetch` are enough at this size. Ask before adding any package not listed above.
+**Not allowed:** UI component libraries, CSS frameworks (e.g. Tailwind; it is a possible future swap of `src/ui`, see below, not something to mix in), state libraries (e.g. Redux, Zustand), and data-fetching libraries (e.g. React Query, SWR, axios). React state and `fetch` are enough at this size. Ask before adding any package not listed above.
 
 ## Structure
 
@@ -20,15 +20,25 @@ src/
   api/          typed client: the only module that calls fetch; one function per endpoint
   hooks/        useAsync (loading, error and data state, with abort on change or unmount)
   types/        response types mirroring the API contract in docs/PLAN.md
-  styles/       tokens.css (design tokens) and global base styles
-  components/   ProductTile, ProductGrid, CategoryNav, SearchBar, EnquiryForm
-  pages/        HomePage, CategoryPage, SearchPage, ProductPage
-  App.tsx       routes and the layout (header with search and categories)
-  main.tsx      entry
+  ui/           THE UI LAYER: every styled component and its CSS Module, plus styles/
+    styles/     tokens.css (design tokens) and global.css (reset, focus, utilities)
+    index.ts    the only entry point into src/ui
+  pages/        HomePage, CategoryPage, SearchPage, ProductPage, NotFoundPage: data and state, no styling
+  Layout.tsx    loads categories, handles search navigation, renders ui/AppShell
+  paths.ts      builds in-app URLs (encodes route params)
+  App.tsx       routes
+  main.tsx      entry; loads the global stylesheets
+tests/          repo-level checks that need Node (e.g. the UI boundary guard)
 ```
 
 ## Architecture
 
+- **UI is a separate, swappable layer.** All markup that carries styling lives in `src/ui`: components such as `AppShell`, `SearchBar`, `CategoryNav`, `Spinner`, `ErrorMessage`, `EmptyState`, and later `ProductGrid`, `ProductTile` and `EnquiryForm`.
+  - Pages and `Layout` hold data, state and navigation. They render `src/ui` components with props and callbacks, and contain no `className`, `style` or CSS imports.
+  - Pages import `src/ui` only through `src/ui/index.ts`.
+  - `src/ui` never calls `src/api`. It may use React Router links and `paths.ts`.
+  - `tests/uiBoundary.test.ts` enforces these rules.
+  - If a page needs new markup, add or extend a `src/ui` component rather than styling the page.
 - Only `src/api` calls `fetch`. Pages and the app layout load data by calling `src/api` functions. Components get data and callbacks through props and never call `fetch`.
 - `src/api` throws a typed error for non-2xx responses, built from the backend's `{ error: { code, message, details? } }` shape. Pages decide how to show it.
 - Types in `src/types` mirror the backend contract in `docs/PLAN.md`. They are duplicated on purpose (no shared package, per the root rules). If the contract changes, update `docs/PLAN.md` and both sides.
@@ -39,7 +49,8 @@ src/
 
 - All colours, spacing, font families and sizes, radii, shadows and borders come from CSS custom properties defined in `src/styles/tokens.css`.
 - No hard-coded colours (hex, `rgb()`, named colours) or raw spacing values in components or CSS Modules. If a value is missing, add a token.
-- Reskinning should mean editing `tokens.css`, plus CSS Modules for layout changes, and never component logic.
+- Reskinning means editing `tokens.css`. A bigger change means rewriting `src/ui` behind the same component names and props, and never touching pages, `api` or `hooks`.
+- **Swapping to Tailwind later:** rewrite the components in `src/ui` with utility classes, delete their CSS Modules, and map `tokens.css` into Tailwind's theme (Tailwind v4's `@theme` is built on CSS variables, so the tokens carry over). Nothing outside `src/ui` and `main.tsx` changes.
 - Media-query breakpoints are the one exception, because CSS variables don't work inside `@media`. Keep them few and documented in `tokens.css`.
 
 ## Quality

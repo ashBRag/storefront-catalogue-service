@@ -28,7 +28,7 @@ browser ──► web (nginx: static React build, proxies /api) ──► api (F
 backend/            own package.json, tsconfig, Dockerfile, tests
   src/domain  src/ports  src/adapters  src/services  src/http  src/config  app.ts  server.ts
 frontend/           own package.json, Vite config, Dockerfile, tests
-  src/api  src/types  src/components  src/pages  App.tsx  main.tsx
+  src/api  src/types  src/hooks  src/ui  src/pages  Layout.tsx  paths.ts  App.tsx  main.tsx
 docker-compose.yml  api + web + mailpit
 docs/PLAN.md        this file
 README.md  DECISIONS.md  AI_USAGE.md  CLAUDE.md (root + backend/ + frontend/)  .env.example
@@ -98,6 +98,13 @@ If time runs short, cut in this order: frontend polish, then Fake Store adapter 
 - **Frontend scaffold:** from the official Vite `react-ts` template. The template now ships TypeScript 7 and oxlint; TypeScript is pinned to 5.x (repo rule) and oxlint removed (no linter, matching the backend; ESLint and Prettier were requested and declined to stay within "Do not build"). Code style follows the backend (semicolons, single quotes).
 - **Frontend dev proxy:** `npm run dev` proxies `/api` to `API_PROXY_TARGET` (default `http://localhost:3000`), read from the repo-root `.env` or the environment. It is not a `VITE_` variable, so it never reaches the browser bundle.
 - **Frontend API errors:** `src/api` throws `ApiError` (`status`, `code`, `message`, `details`). A network failure is `status 0`, `NETWORK_ERROR`. A non-2xx without our error shape (e.g. a proxy's HTML 502) is `UNEXPECTED_RESPONSE` with a generic message. Aborts are rethrown unchanged and ignored by `useAsync`.
+- **Frontend UI is a separate, swappable layer (`frontend/src/ui`).** Every styled component, its CSS Module and the design tokens live there. Pages and `Layout` only load data, hold state and navigate: they render `src/ui` components through `src/ui/index.ts` and have no styling of their own. A test (`frontend/tests/uiBoundary.test.ts`) enforces this, because there is no linter.
+  - **Planned growth path: Tailwind CSS.** CSS Modules and tokens are used for the PoC because the look and feel is still undecided and the rules allow no CSS framework.
+  - To adopt Tailwind later: add it to the frontend, rewrite the `src/ui` components with utility classes behind the same names and props, delete their CSS Modules, and map `tokens.css` into Tailwind's theme (v4 `@theme` uses CSS variables, so the tokens carry over).
+  - Pages, `Layout`, `api`, `hooks` and tests don't change, except for selectors in `src/ui`'s own tests. This goes into DECISIONS.md under "How the design supports growth".
+- **Frontend shell:** the header shows the site name, search bar and category links on every page. If categories fail to load, the header shows "Categories are unavailable right now" with a Retry button, and the rest of the page still works. The search bar trims input, ignores a blank query, and is capped at 100 characters like the backend.
+- **Category URLs:** built only by `src/paths.ts` (`encodeURIComponent`) and decoded by React Router's `useParams`. Tested round-trip with spaces, apostrophes, quotes, `%`, `/`, `?` and `#`.
+- **Loading indicator:** `Spinner` is static (an icon plus "Loading…" text in a `role="status"` region), because animations are out of scope.
 - **Upstream timeout:** 5 s, a constant in the product adapter (not an env var). Failures return 502 and the frontend shows an error state.
 
 ## Do not build
