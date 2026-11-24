@@ -40,7 +40,7 @@ The two folders share no code and talk only over HTTP. There is no workspace too
 
 All responses are JSON. Errors use `{ "error": { "code": string, "message": string, "details"?: unknown } }`.
 
-`Product`: `{ id: number, title: string, description: string, price: number, category: string, image: string, rating: { rate: number, count: number } }`
+`Product`: `{ id: number, title: string, description: string, price: number, category: string, imageUrl: string, rating: { rate: number, count: number } }`
 
 | Method | Path | Serves | Success | Errors |
 |---|---|---|---|---|
