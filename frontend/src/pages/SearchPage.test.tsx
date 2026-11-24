@@ -31,6 +31,30 @@ const main = () => screen.getByRole('main');
 const summary = () => within(main()).getAllByRole('status').at(-1)?.textContent;
 
 describe('SearchPage', () => {
+  it('typing a term and clicking Search shows only the products the API returned', async () => {
+    mockedSearch.mockResolvedValue([product(4, 'Rain Jacket'), product(2, 'Cotton Jacket')]);
+    const { currentUrl } = renderApp('/');
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search products' }), 'jacket');
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    expect(currentUrl()).toBe('/search?q=jacket');
+    expect(await within(main()).findByText('2 results for “jacket”')).toBeInTheDocument();
+    const results = within(main()).getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent);
+    expect(results).toEqual(['Rain Jacket', 'Cotton Jacket']);
+    expect(mockedSearch).toHaveBeenCalledExactlyOnceWith('jacket', expect.any(AbortSignal));
+  });
+
+  it('an empty search box does nothing: no navigation and no API call', async () => {
+    const { currentUrl } = renderApp('/');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search products' }), '   {Enter}');
+
+    expect(currentUrl()).toBe('/');
+    expect(mockedSearch).not.toHaveBeenCalled();
+  });
+
   it.each(['/search', '/search?q=', '/search?q=%20%20'])('%s prompts for a term and does not call the API', (url) => {
     renderApp(url);
 

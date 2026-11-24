@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getCategoryProducts, getProduct, searchProducts, submitEnquiry } from './catalogue.ts';
+import { getCategories, getCategoryProducts, getFeatured, getProduct, searchProducts, submitEnquiry } from './catalogue.ts';
 
 function stubFetch() {
   const fetchMock = vi.fn(async () => Response.json({ ok: true }));
@@ -13,6 +13,22 @@ afterEach(() => {
 });
 
 describe('catalogue API', () => {
+  it.each([
+    ['getFeatured', () => getFeatured(), '/api/products/featured'],
+    ['getCategories', () => getCategories(), '/api/categories'],
+  ])('%s calls %s', async (_name, call, url) => {
+    const fetchMock = stubFetch();
+    await call();
+    expect(calledUrl(fetchMock)).toBe(url);
+  });
+
+  it('passes the AbortSignal through to fetch', async () => {
+    const fetchMock = stubFetch();
+    const controller = new AbortController();
+    await getProduct(1, controller.signal);
+    expect(fetchMock).toHaveBeenCalledWith('/api/products/1', expect.objectContaining({ signal: controller.signal }));
+  });
+
   it('encodes category names', async () => {
     const fetchMock = stubFetch();
     await getCategoryProducts("men's clothing");

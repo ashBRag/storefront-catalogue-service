@@ -7,7 +7,7 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md). The spec, pag
 - React 19, TypeScript 5.x with `strict: true`, Vite (built with Node 24)
 - React Router (pages)
 - Plain CSS: CSS Modules beside each UI component, with design tokens in `src/ui/styles/tokens.css`
-- Vitest + React Testing Library + `@testing-library/user-event` + jsdom (tests)
+- Vitest + React Testing Library + `@testing-library/user-event` + `@testing-library/jest-dom` + jsdom (tests)
 - No linter or formatter: strict `tsc` and tests only, matching the backend
 - npm
 
@@ -64,7 +64,7 @@ tests/          repo-level checks that need Node (e.g. the UI boundary guard)
   - Meaningful `alt` text on product images.
   - Visible focus styles (never remove an outline without a replacement).
   - Links (`<Link>`/`<a>`) for navigation, `<button>` for actions. Never a clickable `div`.
-- Tests use React Testing Library queries by role or label, and `user-event` for interactions. Page and component tests mock `src/api`, not `fetch`. Only `src/api`'s own tests stub `fetch`.
+- Tests use React Testing Library queries by role or label (no test ids), jest-dom matchers such as `toHaveAccessibleDescription` where they check accessibility, and `user-event` for interactions. Assert navigation with `currentUrl()` from `src/test/renderApp.tsx`. Page and component tests mock `src/api`, not `fetch`. Only `src/api`'s own tests stub `fetch`.
 
 ## Out of scope: do not build
 

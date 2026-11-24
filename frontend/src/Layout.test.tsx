@@ -9,8 +9,6 @@ import { renderApp } from './test/renderApp.tsx';
 vi.mock('./api/catalogue.ts');
 const mockedGetCategories = vi.mocked(getCategories);
 
-const location = () => screen.getByTestId('location').textContent;
-
 beforeEach(() => {
   mockApiDefaults();
   mockedGetCategories.mockResolvedValue(['electronics', "men's clothing"]);
@@ -18,9 +16,9 @@ beforeEach(() => {
 
 describe('Layout header', () => {
   it('links the site name home', async () => {
-    renderApp('/search?q=x');
+    const { currentUrl } = renderApp('/search?q=x');
     await userEvent.click(screen.getByRole('link', { name: 'Product Catalogue' }));
-    expect(location()).toBe('/');
+    expect(currentUrl()).toBe('/');
   });
 
   it('lists categories as links with encoded URLs', async () => {
@@ -32,10 +30,10 @@ describe('Layout header', () => {
   });
 
   it('decodes the category back on the category page', async () => {
-    renderApp();
+    const { currentUrl } = renderApp();
     await userEvent.click(await screen.findByRole('link', { name: "men's clothing" }));
 
-    expect(location()).toBe("/categories/men's%20clothing");
+    expect(currentUrl()).toBe("/categories/men's%20clothing");
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Men's clothing");
   });
 
@@ -61,27 +59,27 @@ describe('search bar', () => {
   });
 
   it('navigates to /search with the trimmed, encoded query', async () => {
-    renderApp();
+    const { currentUrl } = renderApp();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search products' }), "  men's & co  ");
     await userEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    expect(location()).toBe('/search?q=men%27s+%26+co');
+    expect(currentUrl()).toBe('/search?q=men%27s+%26+co');
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Search results');
     expect(searchProducts).toHaveBeenCalledWith("men's & co", expect.any(AbortSignal));
   });
 
   it('submits on Enter', async () => {
-    renderApp();
+    const { currentUrl } = renderApp();
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search products' }), 'bag{Enter}');
-    expect(location()).toBe('/search?q=bag');
+    expect(currentUrl()).toBe('/search?q=bag');
   });
 
   it('does nothing for a blank query', async () => {
-    renderApp('/categories/electronics');
+    const { currentUrl } = renderApp('/categories/electronics');
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search products' }), '   ');
     await userEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    expect(location()).toBe('/categories/electronics');
+    expect(currentUrl()).toBe('/categories/electronics');
   });
 
   it('shows the current query on the search page', () => {

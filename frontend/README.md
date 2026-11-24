@@ -66,7 +66,7 @@ Run from `frontend/`.
 | `npm run dev` | Vite dev server on http://localhost:5173, with hot reload and the `/api` proxy |
 | `npm run build` | Type-checks (`tsc -b`), then builds static files into `dist/` |
 | `npm run preview` | Serves `dist/` on http://localhost:4173, with the same `/api` proxy |
-| `npm test` | Vitest + React Testing Library + user-event in jsdom. The API is mocked, so it needs no backend. |
+| `npm test` | Vitest + React Testing Library + user-event + jest-dom in jsdom. `src/api` is mocked, so it needs no backend. Queries are by role and label only (no test ids). |
 | `npm run typecheck` | `tsc -b` across the app, the Vite config and `tests/` |
 
 There is no lint script. Like the backend, the frontend relies on TypeScript strict mode and tests only (see "Do not build" in [docs/PLAN.md](../docs/PLAN.md)).

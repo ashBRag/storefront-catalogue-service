@@ -67,14 +67,14 @@ describe('CategoryPage', () => {
 
   it('shows "Category not found" with a link home on a 404', async () => {
     mockedGetCategoryProducts.mockRejectedValue(new ApiError(404, 'NOT_FOUND', 'Category "shoes" not found'));
-    renderApp(categoryPath('shoes'));
+    const { currentUrl } = renderApp(categoryPath('shoes'));
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Category not found' })).toBeTruthy();
     expect(within(main()).queryByRole('alert')).toBeNull();
     expect(document.title).toBe('Category not found | Product Catalogue');
 
     await userEvent.click(within(main()).getByRole('link', { name: 'Go to the home page' }));
-    expect(screen.getByTestId('location').textContent).toBe('/');
+    expect(currentUrl()).toBe('/');
   });
 
   it('shows other errors with a retry', async () => {

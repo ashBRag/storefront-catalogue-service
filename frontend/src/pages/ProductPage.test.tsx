@@ -121,6 +121,20 @@ describe('enquiry form: client-side validation', () => {
     expect(mockedSubmit).not.toHaveBeenCalled();
   });
 
+  it('an invalid email and a missing name show errors attached to those fields, and nothing is sent', async () => {
+    await openEnquiry();
+    await userEvent.type(field(/^Email/), 'not-an-email');
+    await userEvent.click(within(main()).getByRole('button', { name: 'Send enquiry' }));
+
+    expect(field(/^Name/)).toBeInvalid();
+    expect(field(/^Name/)).toHaveAccessibleDescription('Enter your name');
+    expect(field(/^Email/)).toBeInvalid();
+    expect(field(/^Email/)).toHaveAccessibleDescription(/Enter a valid email address/);
+    expect(field(/^Phone/)).toBeValid();
+    expect(field(/^Email/)).toHaveValue('not-an-email');
+    expect(mockedSubmit).not.toHaveBeenCalled();
+  });
+
   it('clears an error as soon as the field is fixed', async () => {
     await openEnquiry();
     await userEvent.click(within(main()).getByRole('button', { name: 'Send enquiry' }));
@@ -142,8 +156,8 @@ describe('enquiry form: submitting', () => {
     await userEvent.click(send);
     await userEvent.click(send);
 
-    const sending = within(main()).getByRole('button', { name: 'Sending…' });
-    expect(sending).toHaveProperty('disabled', true);
+    expect(within(main()).getByRole('button', { name: 'Sending…' })).toBeDisabled();
+    expect(within(main()).getByRole('button', { name: 'Cancel' })).toBeDisabled();
     expect(within(main()).getByText('Sending your enquiry…')).toBeTruthy();
     expect(mockedSubmit).toHaveBeenCalledOnce();
     expect(mockedSubmit).toHaveBeenCalledWith(
@@ -182,7 +196,8 @@ describe('enquiry form: submitting', () => {
     await userEvent.click(within(main()).getByRole('button', { name: 'Send enquiry' }));
 
     const email = field(/^Email/);
-    expect(await within(main()).findByText('Email must be a valid email address')).toBeTruthy();
+    expect(await within(main()).findByText('Email must be a valid email address')).toBeInTheDocument();
+    expect(email).toHaveAccessibleDescription(/Email must be a valid email address/);
     expect(email.getAttribute('aria-invalid')).toBe('true');
     expect(document.activeElement).toBe(email);
     expect(field(/^Name/)).toHaveProperty('value', '  Ann Lee ');

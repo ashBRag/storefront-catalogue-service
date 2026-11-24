@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getFeatured } from '../api/catalogue.ts';
+import { getFeatured, getProduct } from '../api/catalogue.ts';
 import { ApiError } from '../api/client.ts';
 import { mockApiDefaults } from '../test/mockApi.ts';
 import { renderApp } from '../test/renderApp.tsx';
@@ -55,12 +55,20 @@ describe('HomePage', () => {
     await within(main()).findByRole('list');
   });
 
-  it('links each tile to its product page', async () => {
-    mockedGetFeatured.mockResolvedValue([product(7)]);
-    renderApp('/');
+  it('opens the product page with its details when a tile is clicked', async () => {
+    const seven = { ...product(7), description: 'A sturdy seven.', price: 70.5 };
+    mockedGetFeatured.mockResolvedValue([seven]);
+    vi.mocked(getProduct).mockResolvedValue(seven);
+    const { currentUrl } = renderApp('/');
 
     await userEvent.click(await within(main()).findByRole('link', { name: /Product 7/ }));
-    expect(screen.getByTestId('location').textContent).toBe('/products/7');
+
+    expect(currentUrl()).toBe('/products/7');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Product 7' })).toBeInTheDocument();
+    expect(within(main()).getByText('$70.50')).toBeInTheDocument();
+    expect(within(main()).getByText('A sturdy seven.')).toBeInTheDocument();
+    expect(within(main()).getByRole('button', { name: 'Enquire' })).toBeInTheDocument();
+    expect(getProduct).toHaveBeenCalledWith(7, expect.any(AbortSignal));
   });
 
   it('shows the backend message on error, and retries', async () => {
