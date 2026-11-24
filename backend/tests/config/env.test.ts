@@ -12,6 +12,7 @@ describe('loadConfig', () => {
       featured: { productIds: undefined, count: 5 },
       smtp: { host: 'localhost', port: 1025, auth: undefined },
       mail: { from: 'catalogue@example.test', salesInbox: 'sales@example.test' },
+      enquiryRateLimitMax: 5,
     });
   });
 

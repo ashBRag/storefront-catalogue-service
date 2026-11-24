@@ -1,5 +1,5 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { NotFoundError, UpstreamError, ValidationError } from '../domain/errors.ts';
+import { EmailDeliveryError, NotFoundError, UpstreamError, ValidationError } from '../domain/errors.ts';
 import type { ErrorResponse } from './schemas.ts';
 
 interface Mapped {
@@ -30,6 +30,12 @@ function mapError(error: unknown): Mapped {
   if (error instanceof UpstreamError) {
     // Upstream messages can name URLs and internals: keep them in the log only.
     return { status: 502, body: errorBody('UPSTREAM_ERROR', 'The product service is unavailable. Please try again.') };
+  }
+  if (error instanceof EmailDeliveryError) {
+    return { status: 502, body: errorBody('EMAIL_FAILED', "We couldn't send your enquiry. Please try again.") };
+  }
+  if (isFastifyClientError(error) && error.statusCode === 429) {
+    return { status: 429, body: errorBody('RATE_LIMITED', 'Too many requests. Please try again later.') };
   }
   if (isFastifyClientError(error)) {
     // Fastify's own 4xx errors (e.g. malformed request) carry messages written for clients.

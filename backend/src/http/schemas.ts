@@ -12,6 +12,29 @@ export const categoryParams = z.object({
   category: z.string().min(1).max(100),
 });
 
+const PHONE_PATTERN = /^\+?[0-9 ()-]{6,20}$/;
+const MIN_PHONE_DIGITS = 6;
+
+/** A blank optional field (e.g. an empty form input) counts as not given. */
+const blankToUndefined = (value: unknown) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
+
+export const enquiryBody = z.object({
+  productId: z.number().int().positive(),
+  name: z.string().trim().min(1, 'is required').max(100).regex(/^[^\r\n]*$/, 'must be a single line'),
+  email: z.string().trim().pipe(z.email('must be a valid email address').max(254)),
+  phone: z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .trim()
+      .regex(PHONE_PATTERN, 'must be 6–20 digits, spaces, +, -, or ()')
+      .refine((phone) => phone.replace(/\D/g, '').length >= MIN_PHONE_DIGITS, 'must contain at least 6 digits')
+      .optional(),
+  ),
+  message: z.string().trim().min(1, 'is required').max(1000),
+});
+
 export const searchQuery = z.object({
   q: z.string().trim().min(1, 'must not be empty').max(100, 'must be at most 100 characters'),
 });
@@ -32,6 +55,9 @@ export type CategoriesResponse = readonly string[];
 export type CategoryProductsResponse = CategoryProducts;
 export type SearchResponse = Product[];
 export type ProductResponse = Product;
+export interface EnquiryResponse {
+  readonly ok: true;
+}
 
 export interface ErrorResponse {
   readonly error: { readonly code: string; readonly message: string; readonly details?: unknown };

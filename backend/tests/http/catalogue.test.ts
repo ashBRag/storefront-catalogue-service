@@ -1,16 +1,12 @@
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { InMemoryProductSource } from '../../src/adapters/InMemoryProductSource.ts';
-import { buildApp } from '../../src/app.ts';
 import { UpstreamError } from '../../src/domain/errors.ts';
 import type { ProductSource } from '../../src/ports/ProductSource.ts';
+import { buildTestApp } from '../helpers/testApp.ts';
 
 function appWith(productSource: ProductSource) {
-  return buildApp({
-    logger: false,
-    productSource,
-    catalogue: { featuredProductIds: undefined, featuredCount: 5 },
-  });
+  return buildTestApp({ productSource }).app;
 }
 
 const ids = (body: unknown) => (body as { id: number }[]).map((product) => product.id);

@@ -31,3 +31,8 @@ export class ValidationError extends Error {
     this.details = details;
   }
 }
+
+/** The email provider failed to accept a message. The HTTP layer maps it to 502. */
+export class EmailDeliveryError extends Error {
+  override readonly name = 'EmailDeliveryError';
+}

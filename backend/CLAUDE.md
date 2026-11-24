@@ -5,7 +5,7 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md).
 ## Stack
 
 - Node 24 (Active LTS), TypeScript 5.x with `strict: true`
-- Fastify (HTTP), @fastify/helmet (security headers), zod (validation), nodemailer (email), pino (logging, via Fastify's logger)
+- Fastify (HTTP), @fastify/helmet (security headers), @fastify/rate-limit (enquiry rate limit), zod (validation), nodemailer (email), pino (logging, via Fastify's logger)
 - Vitest + supertest (tests)
 - npm
 

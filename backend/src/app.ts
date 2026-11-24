@@ -1,12 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { registerErrorHandling } from './http/errorHandler.ts';
 import { catalogueRoutes } from './http/routes/catalogue.ts';
+import { enquiryRoutes } from './http/routes/enquiries.ts';
 import { healthRoutes } from './http/routes/health.ts';
+import type { EmailSender } from './ports/EmailSender.ts';
 import type { ProductSource } from './ports/ProductSource.ts';
 import { CatalogueService, type CatalogueOptions } from './services/CatalogueService.ts';
+import { EnquiryService, type EnquiryOptions } from './services/EnquiryService.ts';
 
 /**
  * Everything the app needs from outside. The HTTP layer only ever sees services
@@ -17,6 +21,8 @@ export interface AppDeps {
   readonly logger: FastifyServerOptions['logger'];
   readonly productSource: ProductSource;
   readonly catalogue: CatalogueOptions;
+  readonly emailSender: EmailSender;
+  readonly enquiries: EnquiryOptions & { readonly rateLimitMax: number };
 }
 
 export const REQUEST_ID_HEADER = 'x-request-id';
@@ -27,6 +33,9 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     logger: deps.logger,
     requestIdHeader: false,
     genReqId: requestIdFor,
+    // Behind nginx (same Docker network), use X-Forwarded-For for the client IP, but only
+    // when the hop is a private/loopback address, so the rate limit keys on real clients.
+    trustProxy: 'loopback, linklocal, uniquelocal',
   });
 
   app.addHook('onRequest', async (request, reply) => {
@@ -36,10 +45,14 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   registerErrorHandling(app);
   // Security headers. The API serves only JSON; nginx sets the headers for the HTML pages.
   app.register(helmet);
+  // Off globally; enabled per route (only POST /api/enquiries).
+  app.register(rateLimit, { global: false });
   app.register(healthRoutes);
   // Built here, not passed in, so the service logs through Fastify's logger.
   const catalogue = new CatalogueService(deps.productSource, deps.catalogue, app.log.child({ component: 'catalogue' }));
   app.register(catalogueRoutes, { catalogue });
+  const enquiries = new EnquiryService(deps.productSource, deps.emailSender, deps.enquiries);
+  app.register(enquiryRoutes, { enquiries, rateLimitMax: deps.enquiries.rateLimitMax });
 
   return app;
 }

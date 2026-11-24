@@ -20,6 +20,7 @@ const envSchema = z
     SMTP_PASS: z.string().optional(),
     MAIL_FROM: z.email().default('catalogue@example.test'),
     SALES_INBOX: z.email().default('sales@example.test'),
+    RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(1000).default(5),
   })
   .refine((env) => (env.SMTP_USER === undefined) === (env.SMTP_PASS === undefined), {
     path: ['SMTP_USER'],
@@ -41,6 +42,8 @@ export interface Config {
     readonly auth: { readonly user: string; readonly pass: string } | undefined;
   };
   readonly mail: { readonly from: string; readonly salesInbox: string };
+  /** Max enquiries per minute per client IP. */
+  readonly enquiryRateLimitMax: number;
 }
 
 export class ConfigError extends Error {
@@ -83,5 +86,6 @@ function toConfig(env: Env): Config {
     featured: { productIds: env.FEATURED_PRODUCT_IDS, count: env.FEATURED_COUNT },
     smtp: { host: env.SMTP_HOST, port: env.SMTP_PORT, auth },
     mail: { from: env.MAIL_FROM, salesInbox: env.SALES_INBOX },
+    enquiryRateLimitMax: env.RATE_LIMIT_MAX,
   };
 }

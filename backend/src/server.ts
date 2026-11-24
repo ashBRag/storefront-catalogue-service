@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyServerOptions } from 'fastify';
 import { FakeStoreProductSource } from './adapters/FakeStoreProductSource.ts';
+import { SmtpEmailSender } from './adapters/SmtpEmailSender.ts';
 import { buildApp } from './app.ts';
 import { ConfigError, loadConfig, type Config } from './config/env.ts';
 
@@ -9,6 +10,8 @@ async function main(): Promise<void> {
     logger: loggerOptions(config),
     productSource: new FakeStoreProductSource({ baseUrl: config.productApi.baseUrl }),
     catalogue: { featuredProductIds: config.featured.productIds, featuredCount: config.featured.count },
+    emailSender: new SmtpEmailSender(config.smtp),
+    enquiries: { ...config.mail, rateLimitMax: config.enquiryRateLimitMax },
   });
   closeOnSignals(app);
   await app.listen({ port: config.port, host: '0.0.0.0' });
