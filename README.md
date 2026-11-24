@@ -2,7 +2,7 @@
 
 A proof-of-concept product catalogue API: featured products, categories, search, product details, and customer enquiries emailed to a sales inbox.
 Product data comes from the [Fake Store API](https://fakestoreapi.com) today, and emails go to a local [Mailpit](https://mailpit.axllent.org) inbox. Both sit behind interfaces, so either can be swapped without touching the rest.
-This README covers the backend (`backend/`). The React client lives in `frontend/` (not built yet; see [docs/PLAN.md](docs/PLAN.md)).
+This README covers the backend (`backend/`) and running the stack. The React client lives in `frontend/`; see **[frontend/README.md](frontend/README.md)**.
 
 ## Tech choices
 
@@ -58,6 +58,20 @@ npm run dev                    # http://localhost:3000, restarts on file changes
 `npm run dev` loads `../.env` (the repo root) if it exists. The defaults already point SMTP at `localhost:1025`, which is Mailpit's mapped port.
 
 To run the compiled build instead: `npm run build && npm start`.
+
+## Frontend
+
+The React client is in `frontend/`. Full details (tech choices, scripts, structure, re-theming) are in **[frontend/README.md](frontend/README.md)**.
+
+With the backend running on port 3000 (Option A or B above):
+
+```sh
+cd frontend
+npm install
+npm run dev        # http://localhost:5173, with /api proxied to the backend
+```
+
+The frontend's Docker image (nginx on http://localhost:8080) isn't added yet: the `web` service in `docker-compose.yml` is still commented out.
 
 ## API
 
@@ -137,7 +151,7 @@ Strings are trimmed. Enquiries are emailed only, never stored.
 
 ## Check that an enquiry email arrived
 
-1. Send the enquiry `curl` above (or use the frontend once it exists).
+1. Send the enquiry `curl` above, or use the frontend: open a product, click **Enquire**, and submit the form.
 2. Open **http://localhost:8025**. The newest message is titled `Product enquiry: <product title> (#<id>)`, addressed to `SALES_INBOX`, with Reply-To set to the customer.
 
 From the terminal:
