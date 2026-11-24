@@ -93,6 +93,8 @@ If time runs short, cut in this order: frontend polish, then Fake Store adapter 
 - **Product images:** the frontend uses the image URLs from the backend's `Product` as-is (in practice they are hosted by Fake Store).
 - **API errors:** one central handler. `ValidationError` → 400 `VALIDATION_ERROR` (with `details` listing field paths and messages, never the submitted values), `NotFoundError` and unknown routes → 404 `NOT_FOUND`, `UpstreamError` → 502 `UPSTREAM_ERROR` with a generic message, anything else → 500 `INTERNAL_ERROR` with a generic message in every environment. Full errors are only logged.
 - **Security headers:** `@fastify/helmet` with defaults on the API. nginx is responsible for headers on the HTML pages.
+- **Backend image:** multi-stage `node:24-alpine` (not `node:20-alpine` as first asked: Node 20 is end of life and `package.json` requires ≥ 24). The runtime stage has production deps and `dist/` only, runs as `node`, and has a `HEALTHCHECK` on `/health` using Node's built-in `fetch`.
+- **Compose config:** `api` reads `.env` if present (`required: false`), so `docker compose up` works with or without copying `.env.example`. `NODE_ENV`, `PORT`, `SMTP_HOST` and `SMTP_PORT` are fixed in `docker-compose.yml` and win over `.env`, because inside the stack they must point at the other containers. `mailpit` uses the untagged image (latest); pin a version for repeatable builds.
 - **Upstream timeout:** 5 s, a constant in the product adapter (not an env var). Failures return 502 and the frontend shows an error state.
 
 ## Do not build

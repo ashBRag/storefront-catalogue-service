@@ -1,0 +1,43 @@
+# Local stack: `docker compose up --build`
+#   API:          http://localhost:3000   (try /health, /api/products/featured)
+#   Mailpit inbox: http://localhost:8025  (enquiry emails land here; no accounts needed)
+#
+# Config: copy .env.example to .env to change anything. Without a .env file the
+# backend's built-in defaults apply, so this works with zero edits.
+
+services:
+  api:
+    build:
+      context: ./backend
+    env_file:
+      - path: .env
+        required: false
+    # These win over .env: inside the stack they must point at the other containers.
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web inbox
+    restart: unless-stopped
+
+  # Frontend (step 6–8 of docs/PLAN.md): nginx serves the React build and proxies
+  # /api to the api service, so the browser talks to one origin (no CORS).
+  # web:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped
