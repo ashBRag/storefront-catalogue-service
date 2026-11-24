@@ -1,18 +1,68 @@
 # Decisions
 
-> Draft. The backend assumptions and growth sections are filled in from `docs/PLAN.md` at the end of the build. The [Frontend](#frontend) section is complete.
+Decisions, assumptions and cuts for the whole repo. The backend and shared ones come first; frontend-specific ones are in [Frontend](#frontend). The full working log of assumptions, including how each one changed during the build, is in [docs/PLAN.md](docs/PLAN.md) → Assumptions.
 
 ## Assumptions
 
-_To do: copy the final list from `docs/PLAN.md` → Assumptions._
+### Interpreting the brief
+
+- **"The chosen 5 top rated" products (home page)** are picked by the owner with `FEATURED_PRODUCT_IDS` (comma-separated, in display order).
+  - If it's unset, the backend uses the best-rated `FEATURED_COUNT` (default 5).
+  - Unknown and duplicate ids are skipped (unknown ones logged as a warning), extra ids are dropped, and a short list is topped up by rating.
+  - Logic: `CatalogueService.getFeatured()` in `backend/src/services/CatalogueService.ts`.
+- **"Top rated" means one ordering everywhere:** `rating.rate` descending, then `rating.count`, then `id` ascending so the order is deterministic. It's the pure function `rankByRating` in `backend/src/domain/ranking.ts`.
+- **On a category page, "top rated" is the top 5,** and "additional" is the rest, also by rating (`TOP_RATED_IN_CATEGORY = 5`). The plan said 3, and the build request said 5. Fake Store categories have 4–6 products, so most show nothing under "More in…", and "top rated" includes low-rated items. Changing it is one constant.
+- **Search** is a case-insensitive substring match on title, description and category.
+  - The query is trimmed and must be 1–100 characters; otherwise it's a 400.
+  - Matching uses plain `includes`, never a RegExp built from user input.
+  - Results are ordered by rating, not relevance.
+- **Categories** come from the upstream categories endpoint and are matched exactly. An unknown category is a 404.
+- **"Contact details" for an enquiry:**
+  - `name` (required, 1–100 characters, one line);
+  - `email` (required, valid, up to 254 characters);
+  - `phone` (optional: 6–20 digits, spaces, `+`, `-` or `()`, with at least 6 digits);
+  - `message` (optional, up to 1000 characters).
+
+  Nothing else is collected. The message rule changed twice during the build: optional in the plan, required in step 5, then optional again, so the API and the frontend form agree.
+- **"Send an enquiry" means one email to the sales inbox** (`SALES_INBOX`), with `replyTo` set to the customer and the product title, id and price in it. The API answers 201 `{ ok: true }` only after the SMTP server accepts the message. The build request asked for 201; since nothing is created server-side, 202 or 200 would also fit.
+- **Prices have no currency in the data.** The email shows the plain number; the frontend assumes USD (see [Frontend](#frontend)).
+
+### Running it
+
+- **A reviewer has Docker and nothing else.** `docker compose up --build` runs everything, with or without `.env`. In-stack settings (`SMTP_HOST=mailpit`, `PORT`, `NODE_ENV`) are fixed in `docker-compose.yml`, so a copied `.env.example` can't break them. Verified from a clean copy of the repo.
+- **Mailpit stands in for a real email provider,** so no paid account is needed. Enquiries appear at http://localhost:8025.
+- **Node 24 in every image and package.** It is the Active LTS, and Node 20 is end of life. One build request asked for `node:20-alpine`; it was changed to `node:24-alpine`, because `package.json` requires Node 24 or newer.
 
 ## Dropped or simplified requirements
 
-_To do: anything cut during the build, beyond the planned next steps below._
+Nothing on the plan's "cut if short of time" list was cut: frontend polish, the Fake Store adapter's edge-case tests, and the 404 for unknown categories are all in. These were simplified on purpose:
+
+- **Enquiries aren't stored.** The email is the only record, so a lost email loses the enquiry (`EnquiryService` in `backend/src/services/EnquiryService.ts`).
+- **The rate limit is in memory and per instance.**
+  - `@fastify/rate-limit` allows `RATE_LIMIT_MAX` (default 5) enquiries per minute per IP on `POST /api/enquiries` only.
+  - Behind nginx, the client IP comes from `X-Forwarded-For`, trusted only from private or loopback addresses (`trustProxy` in `backend/src/app.ts`).
+  - Behind Docker Desktop's port mapping, every browser on the host shares one address. In production, the trusted proxy should be the real load balancer.
+- **Every request goes straight to Fake Store.** There's no cache and no retry. A category page makes two upstream calls (categories and products). The adapter times out after 5 s, and any upstream failure becomes a generic 502 (`backend/src/adapters/FakeStoreProductSource.ts`).
+- **Errors shown to customers are generic for anything unexpected.**
+  - A 500 says "Something went wrong."
+  - A 502 never includes upstream URLs or SMTP details; the real cause is logged, as the `cause` for email failures.
+  - Customer details are never logged (checked in the container logs).
+- **No CORS.** It was asked for at one point and deliberately skipped, because nginx and the Vite proxy keep the browser on one origin (see [Next steps](#next-steps)).
+- **No linter, formatter or git hooks** in either app. ESLint and Prettier were asked for at one point and declined, to stay within "Do not build". Both apps rely on TypeScript strict mode and tests.
+- **Base images aren't pinned to a version:** `axllent/mailpit` and `nginx:alpine` are untagged. That's fine for a demo, but builds aren't fully repeatable.
+- **Tests:** 111 backend tests (Vitest + supertest on in-memory adapters) and 155 frontend tests. There are no end-to-end tests in the repo. The full Docker path was verified by hand during the build: headless Chrome through home, category, search and enquiry, then the email checked through Mailpit's API.
 
 ## How the design supports growth
 
-_To do._
+- **Ports and adapters in the backend** (`backend/src/`). The direction is `http → services → ports ← adapters`. Services depend only on `ProductSource` and `EmailSender` (`ports/`), never on Fake Store, nodemailer or Fastify. Only `app.ts` and `server.ts` know about concrete adapters.
+  - **New product data source:** write one new `ProductSource` adapter and wire it in `server.ts`. Fake Store's URL and response shapes exist only in `FakeStoreProductSource`, which validates them with zod and converts them to the `Product` type in `domain/product.ts`.
+  - **New email provider (e.g. SES):** an SES-over-SMTP setup is just config (`SMTP_*`). An SES API client is one new `EmailSender` adapter.
+  - **Caching and retries** can be added later as decorators that wrap `ProductSource`, so services and routes don't change.
+- **Business rules are pure and tested on their own:** ranking (`domain/ranking.ts`), the enquiry email builder with HTML escaping and header-injection stripping (`services/enquiryEmail.ts`), and validation (`http/schemas.ts`). The in-memory adapters (`adapters/InMemory*.ts`) let services and HTTP routes be tested without a network.
+- **One validated config.** Every setting comes from env vars, checked by zod at startup with every problem reported at once (`config/env.ts`), and documented with safe defaults in `.env.example` and the README.
+- **One API contract** (`docs/PLAN.md` → API contract) and one error shape, `{ error: { code, message, details? } }`. The frontend's types (`frontend/src/types/index.ts`) are a deliberate copy of that contract: no shared package. OpenAPI is the next step if more clients appear.
+- **Both apps are plain containers** with health checks, so they deploy as-is to ECS Fargate or App Runner. The frontend is static files plus a small nginx config.
+- **Frontend:** see [Frontend → How the design supports growth](#how-the-design-supports-growth-1). In short: only `src/api` talks to the backend, the look and feel is tokens plus a swappable `src/ui` layer, and the data-fetching hook is used in five places.
 
 ## Next steps
 
@@ -25,6 +75,14 @@ These were cut on purpose to stay inside the 2–3 hour time-box. The design lea
 - **CORS.** Not needed today, because nginx (in Docker) and the Vite dev proxy forward `/api`, so the browser only talks to one origin. It would be needed if the frontend were ever served from a different origin.
 - **AWS.** No infrastructure code is included. The solution is AWS-compatible: both apps are plain containers (ECS Fargate or App Runner), and SES can replace Mailpit through an SMTP or SES `EmailSender` adapter.
 - **Tooling.** No workspace tooling, no linting beyond `tsc` strict checks, no git hooks and no Swagger/OpenAPI. The API contract is documented in `docs/PLAN.md`. OpenAPI is the next thing to add if the API gains more consumers.
+
+Found during the build, beyond the plan's list:
+
+- **Make the trusted proxy configurable for production.** `trustProxy` in `backend/src/app.ts` trusts any private or loopback hop. That fits Docker; production should name the load balancer. Also, port 3000 is exposed directly in compose, and a direct client on a private network could set its own `X-Forwarded-For`.
+- **Move the rate limit to a shared store** (e.g. Redis) once there's more than one API instance.
+- **Pin image versions** (`mailpit`, `nginx`) for repeatable builds.
+- **Revisit the category "top rated" count** (5 vs 3) with real data. Today "top rated" is most of each category.
+- **Frontend items** (error boundary, contrast fixes, end-to-end test, SEO): see [Frontend → Next, with another day](#next-with-another-day).
 
 ## Frontend
 
