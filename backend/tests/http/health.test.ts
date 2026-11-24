@@ -1,11 +1,16 @@
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { InMemoryProductSource } from '../../src/adapters/InMemoryProductSource.ts';
 import { buildApp } from '../../src/app.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 describe('GET /health', () => {
-  const app = buildApp({ logger: false });
+  const app = buildApp({
+    logger: false,
+    productSource: new InMemoryProductSource(),
+    catalogue: { featuredProductIds: undefined, featuredCount: 5 },
+  });
 
   beforeAll(async () => {
     await app.ready();
@@ -20,6 +25,13 @@ describe('GET /health', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'ok' });
+  });
+
+  it('sets security headers', async () => {
+    const response = await request(app.server).get('/health');
+
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['x-powered-by']).toBeUndefined();
   });
 
   it('generates a request id when none is sent', async () => {

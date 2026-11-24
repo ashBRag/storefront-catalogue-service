@@ -89,6 +89,8 @@ If time runs short, cut in this order: frontend polish, then Fake Store adapter 
 - **Enquiry delivery:** one email to `SALES_INBOX` with `replyTo` set to the customer, and the product title and id in the subject. Locally it is delivered to Mailpit (http://localhost:8025). The API returns 202 after the SMTP send succeeds, and the frontend then shows "Thank you". A send failure returns 502 and the frontend asks the customer to try again.
 - **Email provider swap:** a production provider (e.g. SES over SMTP, or an SES API adapter) is a new `EmailSender` adapter plus env config. Nothing else changes.
 - **Product images:** the frontend uses the image URLs from the backend's `Product` as-is (in practice they are hosted by Fake Store).
+- **API errors:** one central handler. `ValidationError` → 400 `VALIDATION_ERROR` (with `details` listing field paths and messages, never the submitted values), `NotFoundError` and unknown routes → 404 `NOT_FOUND`, `UpstreamError` → 502 `UPSTREAM_ERROR` with a generic message, anything else → 500 `INTERNAL_ERROR` with a generic message in every environment. Full errors are only logged.
+- **Security headers:** `@fastify/helmet` with defaults on the API. nginx is responsible for headers on the HTML pages.
 - **Upstream timeout:** 5 s, a constant in the product adapter (not an env var). Failures return 502 and the frontend shows an error state.
 
 ## Do not build
@@ -99,7 +101,7 @@ These are cut from the PoC. Each one is listed in DECISIONS.md under "Next steps
 - **Auth and an admin UI.** Featured products are chosen with `FEATURED_PRODUCT_IDS`.
 - **Persisting enquiries.** They are only emailed. Storing them would add an `EnquiryRepository` port.
 - **Customer confirmation emails.** Only the sales inbox is emailed.
-- **CORS.** Not needed, because nginx and the Vite proxy forward `/api`, so the browser only talks to one origin.
+- **CORS.** Not needed, because nginx and the Vite proxy forward `/api`, so the browser only talks to one origin. (Asked for in step 3 and deliberately skipped. Add `@fastify/cors` with an explicit `CORS_ORIGIN` allow-list only if the frontend moves to its own origin.)
 - **AWS infrastructure code.** None in the repo. One line in DECISIONS.md says it is compatible: both apps are containers (ECS/App Runner) and the email adapter can point at SES.
 - **Workspace tooling, extra linting and git hooks, Swagger.** Only `tsc` strict checks and tests. The API contract lives in this file.
 

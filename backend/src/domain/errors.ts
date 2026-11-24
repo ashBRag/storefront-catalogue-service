@@ -23,4 +23,11 @@ export class NotFoundError extends Error {
 /** Caller input broke a business rule. The HTTP layer maps it to 400. */
 export class ValidationError extends Error {
   override readonly name = 'ValidationError';
+  /** Safe to show the caller: which fields failed and why (never the submitted values). */
+  readonly details: unknown;
+
+  constructor(message: string, details?: unknown) {
+    super(message);
+    this.details = details;
+  }
 }

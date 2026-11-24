@@ -1,10 +1,15 @@
 import type { FastifyInstance, FastifyServerOptions } from 'fastify';
+import { FakeStoreProductSource } from './adapters/FakeStoreProductSource.ts';
 import { buildApp } from './app.ts';
 import { ConfigError, loadConfig, type Config } from './config/env.ts';
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const app = buildApp({ logger: loggerOptions(config) });
+  const app = buildApp({
+    logger: loggerOptions(config),
+    productSource: new FakeStoreProductSource({ baseUrl: config.productApi.baseUrl }),
+    catalogue: { featuredProductIds: config.featured.productIds, featuredCount: config.featured.count },
+  });
   closeOnSignals(app);
   await app.listen({ port: config.port, host: '0.0.0.0' });
 }
