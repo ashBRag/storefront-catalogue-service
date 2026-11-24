@@ -39,7 +39,23 @@ Open **http://localhost:5173**.
 
 ## Run with Docker
 
-Not available yet. The frontend container (nginx serving the build and forwarding `/api` to the `api` service) is the last build step. The `web` service in `docker-compose.yml` is still commented out, so `docker compose up` currently starts only the API and Mailpit. Once it's added, the app will be at **http://localhost:8080**. Until then, use [Run locally](#run-locally).
+From the repo root (copying `.env.example` to `.env` is optional):
+
+```sh
+docker compose up --build
+```
+
+Open **http://localhost:8080**. The `web` service builds `frontend/Dockerfile`:
+- a `node:24-alpine` stage runs `npm ci` and `npm run build`;
+- an `nginx:alpine` stage serves `dist/` using [`nginx.conf`](nginx.conf).
+
+nginx:
+- falls back to `index.html` for client-side routes, so deep links and refresh work;
+- caches hashed `/assets/*` files for a year and sends `no-cache` for everything else;
+- adds security headers to pages and assets ([`nginx-security-headers.conf`](nginx-security-headers.conf));
+- proxies `/api/` to `http://api:3000`. It overwrites `X-Forwarded-For` with the client address, so the backend's per-IP enquiry rate limit can't be dodged with a fake header.
+
+`web` starts once `api` is healthy. Enquiry emails show up in Mailpit at http://localhost:8025.
 
 ## Scripts
 
@@ -102,7 +118,7 @@ Tests sit next to the code as `*.test.ts(x)`.
 
 - **Only `/api` on the same origin.** All calls go through `src/api/catalogue.ts` → `request()` in `src/api/client.ts`. Pages and components never call `fetch`.
   - In dev, Vite forwards `/api` to the backend.
-  - In Docker, nginx will.
+  - In Docker, nginx does (`frontend/nginx.conf`).
   - The frontend never calls the Fake Store API. Product image URLs come as-is from our backend's responses.
 
 | Function | Endpoint |

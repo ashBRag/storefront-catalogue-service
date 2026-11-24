@@ -1,5 +1,6 @@
 # Local stack: `docker compose up --build`
-#   API:          http://localhost:3000   (try /health, /api/products/featured)
+#   App:           http://localhost:8080  (the React frontend; /api is proxied to the API)
+#   API:           http://localhost:3000  (try /health, /api/products/featured)
 #   Mailpit inbox: http://localhost:8025  (enquiry emails land here; no accounts needed)
 #
 # Config: copy .env.example to .env to change anything. Without a .env file the
@@ -31,13 +32,14 @@ services:
       - "8025:8025" # web inbox
     restart: unless-stopped
 
-  # Frontend (step 6–8 of docs/PLAN.md): nginx serves the React build and proxies
-  # /api to the api service, so the browser talks to one origin (no CORS).
-  # web:
-  #   build:
-  #     context: ./frontend
-  #   ports:
-  #     - "8080:80"
-  #   depends_on:
-  #     - api
-  #   restart: unless-stopped
+  # Frontend: nginx serves the React build and proxies /api to the api service,
+  # so the browser talks to one origin (no CORS). See frontend/nginx.conf.
+  web:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

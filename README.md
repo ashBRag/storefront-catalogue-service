@@ -36,6 +36,7 @@ docker compose up --build
 
 | What | URL |
 |---|---|
+| **App (frontend)** | **http://localhost:8080** |
 | API | http://localhost:3000 (try http://localhost:3000/api/products/featured) |
 | Health | http://localhost:3000/health |
 | Mailpit inbox (enquiry emails) | http://localhost:8025 |
@@ -71,7 +72,7 @@ npm install
 npm run dev        # http://localhost:5173, with /api proxied to the backend
 ```
 
-The frontend's Docker image (nginx on http://localhost:8080) isn't added yet: the `web` service in `docker-compose.yml` is still commented out.
+With Docker (Option A), the frontend is already running at **http://localhost:8080**: nginx serves the build and proxies `/api` to the API container.
 
 ## API
 
@@ -216,10 +217,10 @@ The SMTP server isn't reachable.
 More than `RATE_LIMIT_MAX` enquiries were sent in a minute from your IP. Wait a minute, or raise `RATE_LIMIT_MAX` in `.env` and restart.
 
 **Port already in use.**
-- With Docker: `Ports are not available: exposing port TCP 0.0.0.0:3000 … bind: address already in use` on Docker Desktop, or `Bind for 0.0.0.0:3000 failed: port is already allocated` on Docker Engine (or the same for `8025` or `1025`).
+- With Docker: `Ports are not available: exposing port TCP 0.0.0.0:3000 … bind: address already in use` on Docker Desktop, or `Bind for 0.0.0.0:3000 failed: port is already allocated` on Docker Engine (or the same for `8080`, `8025` or `1025`).
 - Locally: `EADDRINUSE: address already in use 0.0.0.0:3000`.
 
-Find what is using the port with `lsof -i :3000` (or `ss -ltnp | grep 3000`) and stop it. A common cause is running Option A and Option B at the same time: `docker compose down` frees all three ports.
+Find what is using the port with `lsof -i :3000` (or `ss -ltnp | grep 3000`) and stop it. A common cause is running Option A and Option B at the same time: `docker compose down` frees all four ports.
 - Locally, you can also pick another port: `PORT=3001 npm run dev`.
 - With Docker, change the left-hand side of the port mapping in `docker-compose.yml`, e.g. `"3001:3000"`.
 
