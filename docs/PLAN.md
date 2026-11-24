@@ -80,15 +80,15 @@ If time runs short, cut in this order: frontend polish, then Fake Store adapter 
 
 ## Assumptions (edit freely)
 
-- **"Chosen 5 top rated" (home page):** the owner picks them with `FEATURED_PRODUCT_IDS` (comma-separated, in display order). If it is unset, the backend uses the top 5 by `rating.rate`, tie-broken by `rating.count`. Unknown IDs are skipped and logged.
+- **"Chosen 5 top rated" (home page):** the owner picks them with `FEATURED_PRODUCT_IDS` (comma-separated, in display order). If it is unset, the backend uses the top `FEATURED_COUNT` (default 5) by `rating.rate`, tie-broken by `rating.count`. Unknown IDs are skipped and logged.
 - **Category page "top rated" vs "additional":** `topRated` is the category's top 3 by rating, using the same sort. `others` is the rest, also sorted by rating. A category with ≤ 3 products has an empty `others`.
 - **Search:** case-insensitive substring match on title, description and category. `q` is trimmed, 1–100 chars. A missing or empty `q` returns 400 (the frontend never sends one). No ranking or fuzzy matching.
 - **Categories:** taken from the upstream categories endpoint and matched exactly after URL decoding (e.g. `men's clothing`). An unknown category returns 404.
 - **Enquiry "contact details":** `name` (1–100), `email` (valid), `phone` (optional, 6–20 chars of digits, spaces, `+`, `-`, `()`), `message` (optional, ≤ 2000), `productId` (required, must exist). No other personal data is collected.
-- **Enquiry delivery:** one email to `SALES_INBOX_ADDRESS` with `replyTo` set to the customer, and the product title and id in the subject. Locally it is delivered to Mailpit (http://localhost:8025). The API returns 202 after the SMTP send succeeds, and the frontend then shows "Thank you". A send failure returns 502 and the frontend asks the customer to try again.
+- **Enquiry delivery:** one email to `SALES_INBOX` with `replyTo` set to the customer, and the product title and id in the subject. Locally it is delivered to Mailpit (http://localhost:8025). The API returns 202 after the SMTP send succeeds, and the frontend then shows "Thank you". A send failure returns 502 and the frontend asks the customer to try again.
 - **Email provider swap:** a production provider (e.g. SES over SMTP, or an SES API adapter) is a new `EmailSender` adapter plus env config. Nothing else changes.
 - **Product images:** the frontend uses the image URLs from the backend's `Product` as-is (in practice they are hosted by Fake Store).
-- **Upstream timeout:** 5 s, configurable. Failures return 502 and the frontend shows an error state.
+- **Upstream timeout:** 5 s, a constant in the product adapter (not an env var). Failures return 502 and the frontend shows an error state.
 
 ## Do not build
 
