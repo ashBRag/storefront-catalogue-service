@@ -4,11 +4,15 @@
 // behind these same component names and props; nothing outside src/ui changes.
 
 export { AppShell } from './AppShell.tsx';
+export { Button } from './Button.tsx';
 export { CategoryNav } from './CategoryNav.tsx';
 export { EmptyState } from './EmptyState.tsx';
+export { EnquiryForm } from './EnquiryForm.tsx';
+export { EnquiryThanks } from './EnquiryThanks.tsx';
 export { ErrorMessage } from './ErrorMessage.tsx';
 export { formatCategory, formatPrice, PRICE_CURRENCY } from './format.ts';
 export { PageTitle } from './PageTitle.tsx';
+export { ProductDetails } from './ProductDetails.tsx';
 export { ProductGrid } from './ProductGrid.tsx';
 export { ProductSection } from './ProductSection.tsx';
 export { ProductTile } from './ProductTile.tsx';

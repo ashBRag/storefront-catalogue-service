@@ -30,7 +30,7 @@ export interface EnquiryInput {
   readonly name: string;
   readonly email: string;
   readonly phone?: string;
-  readonly message: string;
+  readonly message?: string;
 }
 
 /** POST /api/enquiries success body. */

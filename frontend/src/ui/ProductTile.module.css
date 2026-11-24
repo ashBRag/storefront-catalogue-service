@@ -45,8 +45,3 @@
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
 }
-
-.rating {
-  font-size: var(--font-size-sm);
-  color: var(--color-rating);
-}

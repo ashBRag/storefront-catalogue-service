@@ -2,7 +2,8 @@ import { useId } from 'react';
 import { Link } from 'react-router';
 import { productPath } from '../paths.ts';
 import type { Product } from '../types/index.ts';
-import { formatCount, formatPrice, formatRate } from './format.ts';
+import { formatPrice } from './format.ts';
+import { Rating } from './Rating.tsx';
 import styles from './ProductTile.module.css';
 
 export type HeadingLevel = 2 | 3;
@@ -21,7 +22,6 @@ interface ProductTileProps {
 export function ProductTile({ product, headingLevel = 2 }: ProductTileProps) {
   const id = useId();
   const Title = headingLevel === 2 ? 'h2' : 'h3';
-  const { rate, count } = product.rating;
 
   return (
     <Link to={productPath(product.id)} className={styles.tile} aria-labelledby={`${id}-title ${id}-price ${id}-rating`}>
@@ -40,12 +40,7 @@ export function ProductTile({ product, headingLevel = 2 }: ProductTileProps) {
       <p id={`${id}-price`} className={styles.price}>
         {formatPrice(product.price)}
       </p>
-      <p className={styles.rating}>
-        <span className="visually-hidden" id={`${id}-rating`}>
-          {count === 0 ? 'No ratings yet' : `Rated ${formatRate(rate)} out of 5 from ${formatCount(count)} ratings`}
-        </span>
-        <span aria-hidden="true">{count === 0 ? 'No ratings yet' : `★ ${formatRate(rate)} (${formatCount(count)})`}</span>
-      </p>
+      <Rating rating={product.rating} id={`${id}-rating`} />
     </Link>
   );
 }

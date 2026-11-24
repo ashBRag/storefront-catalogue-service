@@ -24,6 +24,7 @@ src/
     styles/     tokens.css (design tokens) and global.css (reset, focus, utilities)
     index.ts    the only entry point into src/ui
   pages/        HomePage, CategoryPage, SearchPage, ProductPage, NotFoundPage: data and state, no styling
+  enquiry/      enquiry validation (mirrors backend rules), useEnquiryForm, EnquiryPanel: logic, no styling
   Layout.tsx    loads categories, handles search navigation, renders ui/AppShell
   paths.ts      builds in-app URLs (encodes route params)
   App.tsx       routes

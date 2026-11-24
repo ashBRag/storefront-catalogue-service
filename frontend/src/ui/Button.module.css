@@ -1,0 +1,27 @@
+.button {
+  min-height: var(--control-height);
+  padding: 0 var(--space-6);
+  border: var(--border-width) solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: var(--disabled-opacity);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.secondary {
+  background: var(--color-bg);
+  color: var(--color-primary);
+}

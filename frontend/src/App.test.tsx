@@ -17,10 +17,14 @@ describe('routes', () => {
   it.each([
     ['/', 'Top rated'],
     ['/search?q=lamp', 'Search results'],
-    ['/products/7', 'Product 7'],
   ])('%s renders its page', (url, title) => {
     renderApp(url);
     expect(heading()).toBe(title);
+  });
+
+  it('/products/7 renders the product page', () => {
+    renderApp('/products/7');
+    expect(screen.getByText('Loading product…')).toBeTruthy();
   });
 
   it.each(['/nope', '/categories', '/products/1/extra'])('%s renders NotFound', (url) => {

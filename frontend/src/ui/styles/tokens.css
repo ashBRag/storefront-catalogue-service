@@ -17,6 +17,8 @@
   --color-on-primary: #ffffff;
   --color-danger: #b42318;
   --color-danger-surface: #fef3f2;
+  --color-success: #1a7f37;
+  --color-success-surface: #effaf2;
   --color-focus: #f5a623;
   --color-rating: #9a5b00;
   --color-image-bg: #ffffff;
@@ -54,6 +56,9 @@
   --content-max-width: 72rem;
   --control-height: 2.5rem;
   --search-max-width: 28rem;
+  --form-max-width: 36rem;
+  --detail-image-max-width: 28rem;
+  --disabled-opacity: 0.6;
 
   /* Product tiles */
   /* 12rem fits 5 tiles across at --content-max-width, so the 5 featured products share one row. */
