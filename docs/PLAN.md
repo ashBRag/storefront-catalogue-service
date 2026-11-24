@@ -95,6 +95,9 @@ If time runs short, cut in this order: frontend polish, then Fake Store adapter 
 - **Security headers:** `@fastify/helmet` with defaults on the API. nginx is responsible for headers on the HTML pages.
 - **Backend image:** multi-stage `node:24-alpine` (not `node:20-alpine` as first asked: Node 20 is end of life and `package.json` requires ≥ 24). The runtime stage has production deps and `dist/` only, runs as `node`, and has a `HEALTHCHECK` on `/health` using Node's built-in `fetch`.
 - **Compose config:** `api` reads `.env` if present (`required: false`), so `docker compose up` works with or without copying `.env.example`. `NODE_ENV`, `PORT`, `SMTP_HOST` and `SMTP_PORT` are fixed in `docker-compose.yml` and win over `.env`, because inside the stack they must point at the other containers. `mailpit` uses the untagged image (latest); pin a version for repeatable builds.
+- **Frontend scaffold:** from the official Vite `react-ts` template. The template now ships TypeScript 7 and oxlint; TypeScript is pinned to 5.x (repo rule) and oxlint removed (no linter, matching the backend; ESLint and Prettier were requested and declined to stay within "Do not build"). Code style follows the backend (semicolons, single quotes).
+- **Frontend dev proxy:** `npm run dev` proxies `/api` to `API_PROXY_TARGET` (default `http://localhost:3000`), read from the repo-root `.env` or the environment. It is not a `VITE_` variable, so it never reaches the browser bundle.
+- **Frontend API errors:** `src/api` throws `ApiError` (`status`, `code`, `message`, `details`). A network failure is `status 0`, `NETWORK_ERROR`. A non-2xx without our error shape (e.g. a proxy's HTML 502) is `UNEXPECTED_RESPONSE` with a generic message. Aborts are rethrown unchanged and ignored by `useAsync`.
 - **Upstream timeout:** 5 s, a constant in the product adapter (not an env var). Failures return 502 and the frontend shows an error state.
 
 ## Do not build

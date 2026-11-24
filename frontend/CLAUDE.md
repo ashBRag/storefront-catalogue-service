@@ -8,6 +8,7 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md). The spec, pag
 - React Router (pages)
 - Plain CSS: CSS Modules beside each component, with design tokens in `src/styles/tokens.css`
 - Vitest + React Testing Library + `@testing-library/user-event` + jsdom (tests)
+- No linter or formatter: strict `tsc` and tests only, matching the backend
 - npm
 
 **Not allowed:** UI component libraries, CSS frameworks (e.g. Tailwind), state libraries (e.g. Redux, Zustand), and data-fetching libraries (e.g. React Query, SWR, axios). React state and `fetch` are enough at this size. Ask before adding any package not listed above.
@@ -17,6 +18,7 @@ These rules are in addition to the root [CLAUDE.md](../CLAUDE.md). The spec, pag
 ```
 src/
   api/          typed client: the only module that calls fetch; one function per endpoint
+  hooks/        useAsync (loading, error and data state, with abort on change or unmount)
   types/        response types mirroring the API contract in docs/PLAN.md
   styles/       tokens.css (design tokens) and global base styles
   components/   ProductTile, ProductGrid, CategoryNav, SearchBar, EnquiryForm
@@ -42,7 +44,7 @@ src/
 
 ## Quality
 
-- No `any`: use `unknown` and narrow it. Never cast API responses blindly; the types in `src/types` describe them.
+- No `any`: use `unknown` and narrow it. Response JSON becomes typed data in exactly one place, `request()` in `src/api/client.ts`, which trusts our own backend (it validates its data). Nothing else casts response data.
 - Every page that loads data handles **loading**, **error** (with a way to retry or go back) and **empty** states. An unknown product or category (404) gets a "not found" message, not a generic error.
 - Accessible by default:
   - Semantic HTML (`header`, `nav`, `main`, headings in order, lists for product grids).
@@ -50,7 +52,7 @@ src/
   - Meaningful `alt` text on product images.
   - Visible focus styles (never remove an outline without a replacement).
   - Links (`<Link>`/`<a>`) for navigation, `<button>` for actions. Never a clickable `div`.
-- Tests use React Testing Library queries by role or label, and `user-event` for interactions. Mock `src/api`, not `fetch`.
+- Tests use React Testing Library queries by role or label, and `user-event` for interactions. Page and component tests mock `src/api`, not `fetch`. Only `src/api`'s own tests stub `fetch`.
 
 ## Out of scope: do not build
 
