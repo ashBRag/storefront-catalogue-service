@@ -47,6 +47,8 @@ function ProductView({ id }: { readonly id: number }) {
 /** The Enquire button and the inline panel it opens. Cancel closes it and returns focus to the button. */
 function Enquiry({ product }: { readonly product: Product }) {
   const [open, setOpen] = useState(false);
+  // Changing the key remounts the panel: a fresh, empty form (focus goes to Name).
+  const [formKey, setFormKey] = useState(0);
   const enquireButton = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef(false);
 
@@ -73,7 +75,16 @@ function Enquiry({ product }: { readonly product: Product }) {
           </Button>
         </div>
       )}
-      <div id={ENQUIRY_PANEL_ID}>{open && <EnquiryPanel product={product} onCancel={close} />}</div>
+      <div id={ENQUIRY_PANEL_ID}>
+        {open && (
+          <EnquiryPanel
+            key={formKey}
+            product={product}
+            onCancel={close}
+            onSendAnother={() => setFormKey((key) => key + 1)}
+          />
+        )}
+      </div>
     </>
   );
 }

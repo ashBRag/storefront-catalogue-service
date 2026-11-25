@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getFeatured, getProduct } from '../api/catalogue.ts';
@@ -51,7 +51,7 @@ describe('HomePage', () => {
     renderApp('/');
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Top rated');
-    expect(document.title).toBe('Top rated | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Top rated | Product Catalogue'));
     await within(main()).findByRole('list');
   });
 

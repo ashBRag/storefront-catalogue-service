@@ -2,7 +2,7 @@
   display: grid;
   gap: var(--space-4);
   max-width: var(--form-max-width);
-  padding: var(--space-6);
+  padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -10,6 +10,29 @@
 
 .heading {
   font-size: var(--font-size-lg);
+}
+
+.intro {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--color-text-muted);
+}
+
+/* Name and email side by side when there is room; stacked on phones. */
+.row {
+  display: grid;
+  align-items: start;
+  gap: var(--space-4);
+}
+
+/* --bp-medium (see tokens.css) */
+@media (min-width: 40rem) {
+  .form {
+    padding: var(--space-6);
+  }
+
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .formError {

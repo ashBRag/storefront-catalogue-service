@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { searchProducts } from '../api/catalogue.ts';
@@ -55,13 +55,13 @@ describe('SearchPage', () => {
     expect(mockedSearch).not.toHaveBeenCalled();
   });
 
-  it.each(['/search', '/search?q=', '/search?q=%20%20'])('%s prompts for a term and does not call the API', (url) => {
+  it.each(['/search', '/search?q=', '/search?q=%20%20'])('%s prompts for a term and does not call the API', async (url) => {
     renderApp(url);
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Search');
     expect(within(main()).getByText('Enter a search term')).toBeTruthy();
     expect(mockedSearch).not.toHaveBeenCalled();
-    expect(document.title).toBe('Search | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Search | Product Catalogue'));
   });
 
   it('searches for the trimmed query and shows the count and results in order', async () => {
@@ -76,7 +76,7 @@ describe('SearchPage', () => {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
     expect(titles).toEqual(['Product 3', 'Product 1']);
-    expect(document.title).toBe('Search: bag | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Search: bag | Product Catalogue'));
   });
 
   it('uses the singular for one result', async () => {

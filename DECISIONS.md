@@ -175,11 +175,10 @@ Everything here refers to code under `frontend/`. Run instructions are in [front
   - **Every interactive element** gets a visible `:focus-visible` outline (`src/ui/styles/global.css`).
 - **Live regions:** loading indicators and the search result count use `role="status"`, and errors use `role="alert"`.
 - **Contrast** (computed from the tokens, not tested automatically): all text and background pairs are at least 5.4:1. Examples: muted text on the header 5.7:1, rating colour 5.4:1, error text 6.05:1, button text 6.29:1.
+- **Focus ring and form-control edges** meet 3:1 on both white and the grey panel. Focus `#b35900` is 4.8:1 and 4.5:1. Control borders `--color-border-control` `#6e7781` are 4.6:1 and 4.2:1. Decorative borders stay light. These were found below 3:1 during the build and fixed in `src/ui/styles/tokens.css`.
 
 **Left to do:**
 
-- **The focus ring is too faint.** `--color-focus` (`#f5a623`) against white is 2.03:1, below WCAG's 3:1 for focus indicators. This is a token fix in `src/ui/styles/tokens.css`.
-- **Input borders are too faint.** `--color-border` (`#d0d7de`) against white is 1.45:1, below the 3:1 that form-control boundaries need. Also a token fix.
 - **No error summary at the top of the enquiry form.** Focus jumps to the first invalid field instead. A summary with links to each field would help with several errors.
 - **No automated accessibility checks** (axe in tests or CI), and no testing with a real screen reader (NVDA, VoiceOver). All checks so far are role and label queries in tests, plus screenshots.
 - **The tab title updates after load,** but focus is not moved and nothing is announced on route changes. Screen reader users get no cue that a new page has loaded, beyond the loading status.
@@ -192,7 +191,7 @@ Everything here refers to code under `frontend/`. Run instructions are in [front
    - proxies `/api` to `api:3000` with `X-Forwarded-For`, so the backend's enquiry rate limit sees real client IPs.
 
    Then uncomment `web` in `docker-compose.yml`, so `docker compose up` serves the whole app on http://localhost:8080. This is the one remaining step of the build plan.
-2. **Fix the two contrast tokens above,** and add axe checks to the page tests.
+2. **Add axe checks** to the page tests (the contrast fixes are done).
 3. **Add an error boundary** around the routes in `src/App.tsx`. There isn't one today, so an unexpected rendering error would blank the page instead of showing `ErrorMessage`.
 4. **Add one end-to-end test** (e.g. Playwright against `docker compose up`): home → category → product → enquiry, then confirm the email arrived through Mailpit's API. That's the acceptance path, run for real.
 5. **Basic SEO without SSR:**

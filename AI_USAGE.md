@@ -65,11 +65,14 @@ Each item was caught during the build, mostly by tests, typecheck or a real run,
 - **A cacheable 404:** nginx sent the year-long `immutable` cache header on a **404** for a missing asset. *Caught by:* `curl` against the running container. Fixed by removing `always` from that header.
 - **Overstated docs:** a DECISIONS draft said "five pages" (there are four plus the header) and overstated how widely two components are reused. *Caught by:* grepping the code before committing.
 
+- **Misaligned form fields:** the new two-column form put each error *above* its input, so after a failed submit the Name and Email inputs no longer lined up. *Caught by:* the screenshot after the change. Fixed by moving errors below their inputs.
+- **Flaky title tests:** tests read `document.title` straight after the heading appeared, but the title is set by an effect that can run a moment later. They failed about one run in four. *Caught by:* re-running the full suite. They now wait for the title, and six full runs in a row pass.
+
 **False alarm, kept as a lesson:** a first screenshot of the Docker build showed empty image boxes. Rather than assume a timing issue, the AI checked in the browser: all images had loaded and nothing was blocked. The screenshot had been taken before the lazy-loaded images arrived.
 
 ## What the AI found that wasn't asked for
 
-- **Contrast below WCAG:** while documenting accessibility, the AI calculated the token contrasts. The focus ring (2.03:1) and input borders (1.45:1) fall below WCAG's 3:1. These are listed in DECISIONS.md and not yet fixed.
+- **Contrast below WCAG:** while documenting accessibility, the AI calculated the token contrasts. The focus ring (2.03:1) and input borders (1.45:1) fell below WCAG's 3:1. Both were fixed in the enquiry UI pass.
 - **No error boundary** in the frontend. Listed as a next step.
 - **A rate-limit spoofing hole:** if nginx appended `X-Forwarded-For` instead of overwriting it, any client could dodge the per-IP rate limit with a fake header. *Caught by:* checked during the nginx step, with a spoofed request against the running stack.
 

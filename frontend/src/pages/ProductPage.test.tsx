@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getProduct, submitEnquiry } from '../api/catalogue.ts';
@@ -52,7 +52,7 @@ describe('ProductPage details', () => {
     expect(within(main()).getByText('$109.95')).toBeTruthy();
     expect(within(main()).getByText('Rated 3.9 out of 5 from 120 ratings')).toBeTruthy();
     expect(within(main()).getByText('Your perfect pack for everyday use.')).toBeTruthy();
-    expect(document.title).toBe('Fjallraven Backpack | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Fjallraven Backpack | Product Catalogue'));
     expect(mockedGetProduct).toHaveBeenCalledWith(1, expect.any(AbortSignal));
   });
 
@@ -69,7 +69,7 @@ describe('ProductPage details', () => {
     renderApp('/products/999');
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Product not found' })).toBeTruthy();
-    expect(document.title).toBe('Product not found | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Product not found | Product Catalogue'));
   });
 
   it('shows other errors with a retry', async () => {
@@ -114,7 +114,7 @@ describe('enquiry form: client-side validation', () => {
     expect(name.getAttribute('aria-invalid')).toBe('true');
     expect(name.getAttribute('aria-describedby')).toBe('enquiry-name-error');
     expect(document.getElementById('enquiry-name-error')?.textContent).toBe('Enter your name');
-    expect(field(/^Email/).getAttribute('aria-describedby')).toBe('enquiry-email-hint enquiry-email-error');
+    expect(field(/^Email/).getAttribute('aria-describedby')).toBe('enquiry-email-error');
     expect(field(/^Phone/).getAttribute('aria-invalid')).toBe('true');
     expect(field(/^Message/).getAttribute('aria-invalid')).toBeNull();
     expect(document.activeElement).toBe(name);
@@ -145,6 +145,25 @@ describe('enquiry form: client-side validation', () => {
   });
 });
 
+describe('enquiry form: message length', () => {
+  it('counts characters as the customer types and reads the count with the field', async () => {
+    await openEnquiry();
+    const message = field(/^Message/);
+
+    expect(message).toHaveAccessibleDescription(/0 of 1000 characters/);
+    await userEvent.type(message, 'Hello');
+    expect(within(main()).getByText('5 of 1000 characters')).toBeInTheDocument();
+  });
+
+  it('says how many characters are over the limit', async () => {
+    await openEnquiry();
+    await userEvent.click(field(/^Message/));
+    await userEvent.paste('x'.repeat(1004));
+
+    expect(field(/^Message/)).toHaveAccessibleDescription(/1004 of 1000 characters: 4 too many/);
+  });
+});
+
 describe('enquiry form: submitting', () => {
   it('disables the button while sending, ignores double clicks, then thanks the customer by product', async () => {
     let resolve!: (value: EnquiryAccepted) => void;
@@ -172,6 +191,33 @@ describe('enquiry form: submitting', () => {
     expect(main().textContent).toContain('We’ve sent your enquiry about Fjallraven Backpack to our sales team.');
     expect(screen.queryByRole('form')).toBeNull();
     expect(within(main()).queryByRole('button', { name: 'Enquire' })).toBeNull();
+  });
+
+  it('disables every field while sending, so the details cannot change mid-send', async () => {
+    mockedSubmit.mockReturnValue(new Promise(() => {}));
+    await openEnquiry();
+    await fillValid();
+    await userEvent.click(within(main()).getByRole('button', { name: 'Send enquiry' }));
+
+    for (const label of [/^Name/, /^Email/, /^Phone/, /^Message/]) expect(field(label)).toBeDisabled();
+  });
+
+  it('after sending, offers to keep browsing the category or send another enquiry', async () => {
+    await openEnquiry();
+    await fillValid();
+    await userEvent.click(within(main()).getByRole('button', { name: 'Send enquiry' }));
+    await screen.findByRole('heading', { name: 'Thank you' });
+
+    expect(within(main()).getByRole('link', { name: "Continue browsing Men's clothing" })).toHaveAttribute(
+      'href',
+      "/categories/men's%20clothing",
+    );
+
+    await userEvent.click(within(main()).getByRole('button', { name: 'Send another enquiry' }));
+
+    expect(screen.getByRole('form', { name: 'Enquire about Fjallraven Backpack' })).toBeInTheDocument();
+    expect(field(/^Name/)).toHaveValue('');
+    expect(field(/^Name/)).toHaveFocus();
   });
 
   it('sends phone and message when given', async () => {

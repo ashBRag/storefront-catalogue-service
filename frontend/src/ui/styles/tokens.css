@@ -11,7 +11,10 @@
   --color-surface: #f6f7f9;
   --color-text: #1b1f24;
   --color-text-muted: #59636e;
+  /* Decorative borders (tiles, panels). Not for form controls. */
   --color-border: #d0d7de;
+  /* Form control edges: at least 3:1 on --color-bg and --color-surface (WCAG 1.4.11). */
+  --color-border-control: #6e7781;
   --color-primary: #1a5fb4;
   --color-primary-hover: #154c91;
   --color-on-primary: #ffffff;
@@ -19,7 +22,8 @@
   --color-danger-surface: #fef3f2;
   --color-success: #1a7f37;
   --color-success-surface: #effaf2;
-  --color-focus: #f5a623;
+  /* At least 3:1 on --color-bg and --color-surface (WCAG 2.4.13). */
+  --color-focus: #b35900;
   --color-rating: #9a5b00;
   --color-image-bg: #ffffff;
 

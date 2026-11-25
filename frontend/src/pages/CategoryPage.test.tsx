@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCategories, getCategoryProducts } from '../api/catalogue.ts';
@@ -46,7 +46,7 @@ describe('CategoryPage', () => {
     expect(sectionTitles(top)).toEqual(['Product 4', 'Product 2', 'Product 9']);
     expect(sectionTitles(more)).toEqual(['Product 7', 'Product 1']);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Men's clothing");
-    expect(document.title).toBe("Men's clothing | Product Catalogue");
+    await waitFor(() => expect(document).toHaveProperty('title', "Men's clothing | Product Catalogue"));
   });
 
   it('hides the "More in" section when others is empty', async () => {
@@ -71,7 +71,7 @@ describe('CategoryPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Category not found' })).toBeTruthy();
     expect(within(main()).queryByRole('alert')).toBeNull();
-    expect(document.title).toBe('Category not found | Product Catalogue');
+    await waitFor(() => expect(document).toHaveProperty('title', 'Category not found | Product Catalogue'));
 
     await userEvent.click(within(main()).getByRole('link', { name: 'Go to the home page' }));
     expect(currentUrl()).toBe('/');

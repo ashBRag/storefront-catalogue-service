@@ -5,14 +5,23 @@ import { useEnquiryForm } from './useEnquiryForm.ts';
 interface EnquiryPanelProps {
   readonly product: Product;
   readonly onCancel: () => void;
+  /** After a successful send: start again with an empty form. */
+  readonly onSendAnother: () => void;
 }
 
 /** Connects the enquiry form state to the UI: the form, then "Thank you" once sent. */
-export function EnquiryPanel({ product, onCancel }: EnquiryPanelProps) {
+export function EnquiryPanel({ product, onCancel, onSendAnother }: EnquiryPanelProps) {
   const form = useEnquiryForm(product.id);
 
   if (form.status === 'sent') {
-    return <EnquiryThanks productTitle={product.title} email={form.values.email.trim()} />;
+    return (
+      <EnquiryThanks
+        productTitle={product.title}
+        category={product.category}
+        email={form.values.email.trim()}
+        onSendAnother={onSendAnother}
+      />
+    );
   }
   return (
     <EnquiryForm

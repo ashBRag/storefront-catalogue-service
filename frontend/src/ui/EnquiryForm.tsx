@@ -18,6 +18,7 @@ interface EnquiryFormProps {
 }
 
 const FIELD_ORDER: readonly EnquiryField[] = ['name', 'email', 'phone', 'message'];
+const MESSAGE_MAX_LENGTH = 1000;
 
 /** The enquiry form. Presentation and focus only; state and submission live in src/enquiry. */
 export function EnquiryForm({ productTitle, values, errors, sending, formError, invalidAttempts, onChange, onSubmit, onCancel }: EnquiryFormProps) {
@@ -58,10 +59,15 @@ export function EnquiryForm({ productTitle, values, errors, sending, formError, 
       <h2 id="enquiry-heading" className={styles.heading}>
         Enquire about {productTitle}
       </h2>
-      <FormField {...field('name')} label="Name" required autoComplete="name" />
-      <FormField {...field('email')} label="Email" type="email" required autoComplete="email" hint="We'll reply to this address." />
-      <FormField {...field('phone')} label="Phone" type="tel" autoComplete="tel" hint="Digits, spaces, +, - or ()." />
-      <FormField {...field('message')} label="Message" multiline hint="Up to 1000 characters." />
+      <p className={styles.intro}>Our sales team will reply to you by email.</p>
+      <div className={styles.row}>
+        <FormField {...field('name')} label="Name" required autoComplete="name" />
+        <FormField {...field('email')} label="Email" type="email" required autoComplete="email" />
+      </div>
+      <div className={styles.row}>
+        <FormField {...field('phone')} label="Phone" type="tel" autoComplete="tel" hint="Digits, spaces, +, - or ()." />
+      </div>
+      <FormField {...field('message')} label="Message" multiline characterLimit={MESSAGE_MAX_LENGTH} hint="Questions about size, stock, delivery or anything else." />
 
       {formError !== undefined && (
         <p role="alert" className={styles.formError}>

@@ -1,8 +1,8 @@
 .thanks {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   max-width: var(--form-max-width);
-  padding: var(--space-6);
+  padding: var(--space-4);
   border: var(--border-width) solid var(--color-success);
   border-radius: var(--radius-md);
   background: var(--color-success-surface);
@@ -10,4 +10,25 @@
 
 .heading {
   font-size: var(--font-size-lg);
+  color: var(--color-success);
+}
+
+/* Focus is moved here only so screen readers announce the result. The heading is not
+   interactive, so it doesn't show a focus ring (it looked like an error box). */
+.heading:focus {
+  outline: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* --bp-medium (see tokens.css) */
+@media (min-width: 40rem) {
+  .thanks {
+    padding: var(--space-6);
+  }
 }
